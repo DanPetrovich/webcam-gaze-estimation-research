@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+
+# IDE and OS
+.DS_Store
+.idea/
+.vscode/
+
+# Sensitive and local configuration
+.env
+.env.*
+!.env.example
+
+# Research data and generated artifacts
+data/**
+!data/.gitkeep
+outputs/**
+!outputs/.gitkeep
+checkpoints/
+wandb/
+mlruns/
+
+# Models, arrays, and media
+*.ckpt
+*.pt
+*.pth
+*.onnx
+*.engine
+*.npy
+*.npz
+*.mp4
+*.avi
+*.mov
