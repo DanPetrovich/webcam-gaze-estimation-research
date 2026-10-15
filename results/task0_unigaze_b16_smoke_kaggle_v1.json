@@ -1,0 +1,47 @@
+{
+  "record_type": "smoke_test",
+  "status": "smoke_only",
+  "recorded_at": "2026-10-08",
+  "experiment": "task0_unigaze_b16_finetune",
+  "run_id": "20261008T162742Z_smoke_cffd17436_sbebb35b0",
+  "external_ids": {
+    "platform": "kaggle",
+    "notebook_slug": "daniilpet/task0-unigaze-b16-smoke-kaggle",
+    "notebook_version": 1,
+    "version_name": "smoke-t4-16x3-passed"
+  },
+  "provenance": {
+    "unigaze_revision": "9c240fbe33f3d6146970a77b7c8fa06a7e60019e",
+    "checkpoint_sha256": "1220600f8b9fac3640105a9cbec6451b72bec0569c4b9813ba8b55605e1875fd",
+    "source_sha256": "bebb35b07aa511f6c93598abac2d901cb0144970ee6d506e89e01131bcfee70a",
+    "config_sha256": "ffd174363c213e19e5f683bb0bb44184cbedbce6d39ed88d71a0dc8ec17b18ce",
+    "dataset_manifest_sha256": "04135eb7078c74258c7db8adc4d0c455491b8cfd8ddd1acea4021b811e0a4213"
+  },
+  "runtime": {
+    "gpu": "Tesla T4",
+    "gpu_count_allocated": 2,
+    "gpu_count_used": 1,
+    "python": "3.13.15",
+    "torch": "2.11.0+cu128"
+  },
+  "protocol": {
+    "training_subjects": ["p02"],
+    "validation_subject": "p01",
+    "test_subject": "p00",
+    "samples_per_subject": 16,
+    "epochs": 1,
+    "batch_size": 8,
+    "training_scope": "full_model"
+  },
+  "observed_metrics": {
+    "train_mean_angular_error_deg": 20.4320,
+    "validation_mean_angular_error_deg": 16.4139,
+    "test_mean_angular_error_deg": 17.485928,
+    "test_median_angular_error_deg": 17.166345,
+    "test_std_angular_error_deg": 9.881656,
+    "constant_baseline_test_mean_deg": 12.053615,
+    "fold_seconds": 7.861742,
+    "peak_gpu_memory_gib": 1.081740
+  },
+  "interpretation": "End-to-end infrastructure passed: official downloads, official UniGaze preprocessing, dataset audit, full-model forward/backward, validation-based checkpointing, held-out test evaluation, metrics, plots, and Kaggle output versioning all completed. The sample is intentionally tiny and these accuracy values must not be reported as benchmark results."
+}

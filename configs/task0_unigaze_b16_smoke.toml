@@ -1,0 +1,50 @@
+[experiment]
+name = "task0_unigaze_b16_finetune"
+run_mode = "smoke"
+seed = 20261004
+
+[dataset]
+name = "MPIIFaceGaze"
+preprocessing = "official_unigaze"
+split_protocol = "subject_independent_smoke_p02_train_p01_validation_p00_test"
+require_3000_samples_per_subject = false
+
+[model]
+architecture = "vit_b_16"
+initialization = "official_unigaze_mae_b16_epoch_299"
+training_scope = "full_model"
+drop_path_rate = 0.1
+
+[training]
+epochs = 1
+batch_size = 8
+eval_batch_size = 32
+num_workers = 2
+learning_rate = 0.0001
+weight_decay = 0.000001
+gradient_accumulation_steps = 1
+use_amp = true
+
+[smoke_limits]
+test_subject = "p00"
+validation_subject = "p01"
+training_subjects = ["p02"]
+train_samples_per_subject = 16
+validation_samples = 16
+test_samples = 16
+
+[selection]
+criterion = "validation_mean_angular_error_deg"
+evaluate_test_once = true
+
+[tracking]
+enable_wandb = true
+wandb_required = false
+wandb_secret_label = "wandb_api"
+wandb_project = "diploma-gaze-estimation"
+wandb_group = "task0-unigaze-b16"
+wandb_log_every_steps = 10
+wandb_watch_gradients = true
+wandb_gradient_log_frequency = 100
+wandb_log_aggregate_artifact = true
+wandb_alerts = true

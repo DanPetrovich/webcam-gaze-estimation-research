@@ -1,0 +1,42 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "gaze-estimation"
+version = "0.1.0"
+description = "Appearance-based gaze estimation for commodity RGB webcams"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  "mypy>=1.11",
+  "pytest>=8.3",
+  "ruff>=0.6",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gaze_estimation"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+# Notebook sources intentionally contain deferred imports after runtime setup,
+# IPython-provided names, display-only imports, and long pedagogical cells.
+"notebooks/*" = ["E402", "E501", "F401", "F821", "UP017", "UP035"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["gaze_estimation"]
+mypy_path = "src"

@@ -74,6 +74,15 @@ The baseline should record:
 - random seed, environment, hardware, and code revision;
 - checkpoint-selection criterion and final evaluation results.
 
+The first end-to-end Kaggle smoke test has completed successfully. It exercised
+the official UniGaze preprocessing path, MAE-B16 checkpoint loading, full-model
+forward/backward training, identity-disjoint validation and test evaluation,
+checkpointing, plots, aggregate metrics, and W&B synchronization on a deliberately
+tiny 48-sample subset. Its 17.49° test error is a plumbing diagnostic, **not** a
+benchmark result. See
+[`docs/task0_smoke_test.md`](docs/task0_smoke_test.md) for the protocol, measured
+outputs, known limitations, and next execution gate.
+
 ### Uncertainty-aware few-shot personalization
 
 The next research stage will investigate a pretrained backbone with a prediction
@@ -87,12 +96,21 @@ reported experiment.
 
 Planned calibration experiments include:
 
-- selecting high-uncertainty observations;
-- selecting low-uncertainty observations;
+- separating observation validity from calibration informativeness;
+- rejecting or down-weighting blinks, blur, failed landmarks, and likely
+  non-fixations;
+- comparing high- and low-uncertainty selection as deliberately simple
+  baselines;
 - random selection as a baseline;
-- diversity-aware or clustering-based selection;
+- fixed-grid, target-diversity, head-pose-diversity, and feature-diversity
+  selection;
+- quality-gated diversity selection;
 - varying the number of selected calibration samples;
 - comparing calibrated and uncalibrated predictions on identical test samples.
+
+The literature evidence, current gaps, baseline order, and fixed-`k` evaluation
+matrix are documented in
+[`docs/calibration_research_directions.md`](docs/calibration_research_directions.md).
 
 Where screen geometry is available, a differentiable projection may connect the
 predicted gaze vector to the point of gaze and allow evaluation in both spaces.
@@ -147,6 +165,7 @@ src/gaze_estimation/  reusable typed Python package
 tests/                 unit and regression tests
 data/                  local datasets; never committed
 outputs/               local runs and generated artifacts; never committed
+results/               reviewed small summaries and comparison tables
 ```
 
 Reusable logic belongs in `src/gaze_estimation/`; notebooks are not intended to
@@ -171,8 +190,18 @@ python -m ruff check .
 python -m mypy src
 ```
 
-Training and dataset commands will be documented after the first baseline
-pipeline is finalized. No reproducible benchmark result is claimed yet.
+The Task 0 pipeline and smoke configuration are available in
+[`notebooks/task0_unigaze_b16_finetune.ipynb`](notebooks/task0_unigaze_b16_finetune.ipynb)
+and
+[`configs/task0_unigaze_b16_smoke.toml`](configs/task0_unigaze_b16_smoke.toml).
+No reproducible benchmark result is claimed yet; the completed smoke run only
+establishes that the end-to-end experimental plumbing works.
+
+The portable experiment-record format and Kaggle artifact workflow are
+documented in [`docs/experiment_tracking.md`](docs/experiment_tracking.md).
+Every reported run must have a unique manifest tied to both its resolved
+configuration and executed source content; notebook filenames alone are not
+experiment identifiers.
 
 ## Data, privacy, and artifacts
 
@@ -198,7 +227,12 @@ deletion requirements will be documented alongside each experiment protocol.
 
 ## Current limitations
 
-- The training and evaluation pipeline is not yet published.
+- Only the deliberately tiny Task 0 smoke protocol has completed; a complete
+  subject-independent fold and the 15-fold LOPO evaluation have not yet run.
+- The scheduler-order warning observed in the W&B smoke run has been fixed in
+  source, but the corrected notebook still requires a repeat smoke run.
+- The current Kaggle implementation uses one of the two allocated T4 GPUs and
+  must be split into resumable jobs before a full LOPO experiment.
 - Dataset choices and license reviews are not yet finalized.
 - No benchmark numbers or real-time performance claims are currently provided.
 - Reliable fixation or saccade detection cannot be inferred from angular error
