@@ -1,0 +1,30 @@
+[experiment]
+name = "task1_gazegene_mae_b16"
+seed = 20261112
+dataset = "GazeGene_FaceCrops"
+split = "subjects_01_40_train_41_46_validation_47_56_test"
+model = "UniGaze_MAE_B16"
+image_size = 224
+epochs = 12
+early_stopping_patience = 3
+batch_size = 24
+eval_batch_size = 64
+gradient_accumulation_steps = 2
+backbone_learning_rate = 3e-6
+head_learning_rate = 3e-5
+weight_decay = 1e-4
+warmup_fraction = 0.05
+amp = true
+
+[evaluation]
+primary_metric = "mean_angular_error_deg"
+checkpoint_selector = "validation_subject_macro_mean_deg"
+report_subject_macro = true
+report_sample_micro = true
+test_once_after_selection = true
+zero_shot_target = "MPIIFaceGaze"
+
+[hardware]
+reference_gpu = "NVIDIA RTX 4070 Ti Super 16GB"
+portable_batch_size = true
+inference_target = "consumer_webcam"
