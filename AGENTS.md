@@ -149,9 +149,15 @@ GitHub repository `DanPetrovich/codex-gpu-relay`, currently through issue `#1`:
   A no-training full-profile preflight also passed with both datasets, the
   GazeGene audit fingerprint, MAE checkpoint hash, CUDA on the RTX 4070 Ti
   SUPER, AMP FP16, batch size 24, evaluation batch size 64, accumulation 2,
-  and output directory ready. No forward pass, backward pass, training, or
-  zero-shot evaluation was executed. The full preset remains prohibited until
-  the real-resource smoke preset succeeds. Never send local paths, datasets, or
+  and output directory ready. That preflight executed no forward pass,
+  backward pass, training, or zero-shot evaluation. Later on 2026-11-15 the
+  fixed real-resource smoke preset succeeded with exit code 0: it exercised one
+  epoch over 256 samples per split, forward/backward, validation, test, and both
+  checkpoint formats. Peak allocated/reserved CUDA memory was approximately
+  3.33/3.80 GB. Treat its 43–45° errors as non-scientific pipeline diagnostics,
+  not model-quality evidence. The technical gate for the full preset is now
+  satisfied, but do not start it without an explicit user request and a daytime
+  schedule compatible with quiet hours. Never send local paths, datasets, or
   checkpoints dynamically through relay messages.
 
 Keep relay setup files and operational instructions in the dedicated private
