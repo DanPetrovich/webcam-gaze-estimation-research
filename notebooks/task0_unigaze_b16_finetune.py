@@ -77,10 +77,14 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn.functional as F
-from IPython.display import Image as NotebookImage
-from IPython.display import display
 from torch import Tensor, nn
 from torch.utils.data import DataLoader, Dataset, Subset
+
+try:
+    from IPython.display import display
+except ImportError:
+    def display(value: Any) -> None:
+        print(value)
 
 try:
     from tqdm.auto import tqdm
