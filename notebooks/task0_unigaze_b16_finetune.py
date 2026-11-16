@@ -383,14 +383,22 @@ if DEVICE.type != "cuda":
     )
 
 
-for module, requirement in (
+runtime_requirements = [
     ("omegaconf", "omegaconf==2.3.0"),
     ("timm", "timm==1.0.9"),
-    ("face_alignment", "face-alignment==1.4.1"),
-    ("rich", "rich>=13,<15"),
-    ("gdown", "gdown>=5,<6"),
-    ("wandb", "wandb>=0.18,<1"),
-):
+]
+if CONFIG.run_preprocessing:
+    runtime_requirements.extend(
+        [
+            ("face_alignment", "face-alignment==1.4.1"),
+            ("rich", "rich>=13,<15"),
+        ]
+    )
+if IS_KAGGLE:
+    runtime_requirements.append(("gdown", "gdown>=5,<6"))
+if CONFIG.enable_wandb:
+    runtime_requirements.append(("wandb", "wandb>=0.18,<1"))
+for module, requirement in runtime_requirements:
     ensure_package(module, requirement)
 
 
