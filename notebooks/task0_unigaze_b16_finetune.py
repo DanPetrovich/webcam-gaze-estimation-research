@@ -555,9 +555,15 @@ def git_revision(repository: Path) -> str | None:
         return revision_file.read_text(encoding="utf-8").strip()
     if not (repository / ".git").exists():
         return None
-    return subprocess.check_output(
-        ["git", "rev-parse", "HEAD"], cwd=repository, text=True
-    ).strip()
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "HEAD"],
+            cwd=repository,
+            text=True,
+            stderr=subprocess.DEVNULL,
+        ).strip()
+    except (OSError, subprocess.CalledProcessError):
+        return None
 
 
 def sha256_file(path: Path, chunk_size: int = 1024 * 1024) -> str:

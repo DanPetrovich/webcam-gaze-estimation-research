@@ -33,6 +33,7 @@ def test_source_exposes_fixed_server_performance_controls() -> None:
     assert '"pin_memory": CONFIG.pin_memory' in source
     assert "CONFIG.num_workers > 0 and CONFIG.persistent_workers" in source
     assert 'kwargs["prefetch_factor"] = CONFIG.prefetch_factor' in source
+    assert "except (OSError, subprocess.CalledProcessError):" in source
 
 
 def test_notebook_matches_source() -> None:
