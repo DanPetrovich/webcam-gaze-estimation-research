@@ -512,11 +512,12 @@ REQUIRED_MODULES = {
     "timm": "timm",
     "torch": "torch",
     "torchvision": "torchvision",
-    "wandb": "wandb",
 }
 if CONFIG.run_preprocessing:
     REQUIRED_MODULES["face_alignment"] = "face-alignment"
     REQUIRED_MODULES["scipy"] = "scipy"
+if CONFIG.enable_wandb:
+    REQUIRED_MODULES["wandb"] = "wandb"
 
 missing_modules = [
     f"{module} ({distribution})"
