@@ -62,6 +62,13 @@ Current execution status:
   shrinkage is specifically beneficial for one-shot calibration. Ridge-affine
   correction and sample-selection methods remain pending. Details are in
   `docs/task1_mean_offset_baseline.md`.
+- Completed — GazeGene transfer preparation: the fixed 12-epoch MAE-B16 run
+  selected epoch 11, reached 4.8366° GazeGene test subject-macro error, and
+  reached 5.3430° on 15-subject MPIIFaceGaze zero-shot evaluation. Treat the
+  latter as a cross-dataset reference, not a replacement for the 4.5799° Task 0
+  LOPO baseline. The next transfer experiment is a paired repeat of the frozen
+  Task 0 LOPO protocol initialized from the GazeGene backbone. Details are in
+  `docs/task1_gazegene_full_result.md`.
 
 Treat this file as a living project guide. Update it when new materials establish
 a durable project-wide rule, constraint, convention, or decision. Keep temporary
@@ -155,10 +162,16 @@ GitHub repository `DanPetrovich/codex-gpu-relay`, currently through issue `#1`:
   epoch over 256 samples per split, forward/backward, validation, test, and both
   checkpoint formats. Peak allocated/reserved CUDA memory was approximately
   3.33/3.80 GB. Treat its 43–45° errors as non-scientific pipeline diagnostics,
-  not model-quality evidence. The technical gate for the full preset is now
-  satisfied, but do not start it without an explicit user request and a daytime
-  schedule compatible with quiet hours. Never send local paths, datasets, or
-  checkpoints dynamically through relay messages.
+  not model-quality evidence. The full run later completed all 12 epochs and
+  zero-shot evaluation, selected epoch 11, and wrote a passing completion
+  artifact; its aggregate results and checkpoint hashes are recorded in
+  `docs/task1_gazegene_full_result.md`. The measured epoch time total was about
+  16 h 13 min and peak allocated/reserved CUDA memory was 3.33/4.27 decimal GB.
+  The supervisor ultimately reported `timed_out`, and the attempted quiet-hours
+  shutdown did not stop the workload. Before another long run, verify the
+  corrected stop/timeout lifecycle independently and budget runtime from the
+  measured duration plus evaluation margin. Never send local paths, datasets,
+  or checkpoints dynamically through relay messages.
 
 Keep relay setup files and operational instructions in the dedicated private
 relay repository, not in this diploma repository. Record research code, configs,

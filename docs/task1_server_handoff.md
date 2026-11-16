@@ -1,5 +1,14 @@
 # Task 1 server handoff
 
+## Completion status
+
+The handoff was executed successfully on 2026-11-15/16. The full 12-epoch
+`train_and_zero_shot` run completed and selected epoch 11. Aggregate GazeGene
+test, MPIIFaceGaze zero-shot, resource, provenance, and limitation details are
+recorded in `docs/task1_gazegene_full_result.md`. The checkpoint files remain
+private on the server. The next step is the paired Task 0 LOPO comparison
+described below; do not rerun this completed full preset under the same run ID.
+
 Use this handoff in the Codex installation on the personal MacBook that can
 reach the Windows GPU server. The target GPU is an NVIDIA RTX 4070 Ti Super
 with 16 GB VRAM.
