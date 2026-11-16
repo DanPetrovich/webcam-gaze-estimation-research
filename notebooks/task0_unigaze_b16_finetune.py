@@ -17,9 +17,11 @@
 #   all inputs to be present offline.
 #
 # Start with `ExperimentConfig.run_mode = "smoke"`. After it finishes
-# successfully, change the default to `"single_fold"`, then to `"full_lopo"`
-# for the complete 15-fold run. Smoke results are deliberately stored separately
-# and must never be reported as benchmark results.
+# successfully, use `"single_fold"` for a diagnostic fold. Run the complete
+# LOPO evaluation either as `"full_lopo"` or as several `"lopo_shard"` jobs
+# whose explicit, non-overlapping `TASK0_TEST_SUBJECTS` lists cover all 15
+# identities. Smoke results are deliberately stored separately and must never
+# be reported as benchmark results.
 
 # %% [markdown]
 # ## 1. Configuration
@@ -37,9 +39,11 @@
 #
 # The normalized HDF5 files must be produced by the official UniGaze
 # `gazedata_preparation/normalize_mpii.py` pipeline and then upsampled to 3,000
-# samples per subject as described by the authors. Set
-# `ExperimentConfig.run_preprocessing=True` only when the raw dataset and every
-# offline dependency are already installed.
+# samples per subject as described by the authors. Prefer the one-time
+# `task0_unigaze_b16_preprocess.ipynb` output: attach it, set
+# `ExperimentConfig.normalized_data_root` to its `mpiifacegaze_unigaze`
+# directory, and set `run_preprocessing=False`. Set `run_preprocessing=True`
+# only for a self-contained run that intentionally repeats normalization.
 
 # %%
 from __future__ import annotations
@@ -87,45 +91,98 @@ except ImportError:
 
 @dataclass(frozen=True)
 class ExperimentConfig:
-    project_root: str = (
-        "/kaggle/working" if Path("/kaggle").exists() else "/space/project/diploma"
+    project_root: str = os.environ.get(
+        "TASK0_PROJECT_ROOT",
+        "/kaggle/working" if Path("/kaggle").exists() else "/space/project/diploma",
     )
-    runtime_root: str = (
-        "/kaggle/temp/task0_unigaze_b16"
-        if Path("/kaggle").exists()
-        else "/space/project/diploma"
+    runtime_root: str = os.environ.get(
+        "TASK0_RUNTIME_ROOT",
+        (
+            "/kaggle/temp/task0_unigaze_b16"
+            if Path("/kaggle").exists()
+            else "/space/project/diploma"
+        ),
     )
-    run_mode: str = "smoke"  # smoke | single_fold | full_lopo
+    unigaze_repository_root: str | None = os.environ.get("TASK0_UNIGAZE_ROOT")
+    output_base: str | None = os.environ.get("TASK0_OUTPUT_BASE")
+    run_id: str | None = os.environ.get("TASK0_RUN_ID")
+    normalized_data_root: str | None = os.environ.get("TASK0_NORMALIZED_DATA_ROOT")
+    pretrained_checkpoint: str | None = os.environ.get(
+        "TASK0_PRETRAINED_CHECKPOINT"
+    )
+    run_mode: str = os.environ.get(
+        "TASK0_RUN_MODE", "smoke"
+    )  # smoke | single_fold | lopo_shard | full_lopo
+    test_subjects_csv: str | None = os.environ.get("TASK0_TEST_SUBJECTS")
     seed: int = 20261004
     model_type: str = "vit_b_16"
-    epochs: int = 12
+    epochs: int = int(os.environ.get("TASK0_EPOCHS", "12"))
+    early_stopping_patience: int | None = int(
+        os.environ.get("TASK0_EARLY_STOPPING_PATIENCE", "3")
+    )
+    early_stopping_min_delta_deg: float = 0.0
+    evaluate_pretrained_epoch_zero: bool = True
+    evaluate_train_after_each_epoch: bool = os.environ.get(
+        "TASK0_EVALUATE_TRAIN_EACH_EPOCH", "true"
+    ).lower() in {"1", "true", "yes"}
     smoke_epochs: int = 1
-    batch_size: int = 8
-    eval_batch_size: int = 32
-    num_workers: int = 2
-    learning_rate: float = 1e-4
-    weight_decay: float = 1e-6
+    batch_size: int = int(os.environ.get("TASK0_BATCH_SIZE", "8"))
+    eval_batch_size: int = int(os.environ.get("TASK0_EVAL_BATCH_SIZE", "32"))
+    num_workers: int = int(os.environ.get("TASK0_NUM_WORKERS", "2"))
+    prefetch_factor: int = int(os.environ.get("TASK0_PREFETCH_FACTOR", "2"))
+    pin_memory: bool = os.environ.get("TASK0_PIN_MEMORY", "true").lower() in {
+        "1",
+        "true",
+        "yes",
+    }
+    persistent_workers: bool = os.environ.get(
+        "TASK0_PERSISTENT_WORKERS", "true"
+    ).lower() in {"1", "true", "yes"}
+    fine_tune_strategy: str = os.environ.get(
+        "TASK0_FINE_TUNE_STRATEGY", "full"
+    )  # full | head_only | last_n_blocks
+    trainable_last_blocks: int = int(
+        os.environ.get("TASK0_TRAINABLE_LAST_BLOCKS", "2")
+    )
+    backbone_learning_rate: float = float(
+        os.environ.get("TASK0_BACKBONE_LR", "3e-6")
+    )
+    head_learning_rate: float = float(os.environ.get("TASK0_HEAD_LR", "3e-5"))
+    weight_decay: float = float(os.environ.get("TASK0_WEIGHT_DECAY", "1e-4"))
+    warmup_fraction: float = float(os.environ.get("TASK0_WARMUP_FRACTION", "0.05"))
     drop_path_rate: float = 0.1
-    one_cycle_div_factor: float = 25.0
-    one_cycle_final_div_factor: float = 10_000.0
     gradient_accumulation_steps: int = 1
     gradient_clip_norm: float | None = None
     use_amp: bool = True
-    train_subject_limit: int = 16
-    validation_subject_limit: int = 16
-    test_subject_limit: int = 16
+    train_subject_limit: int = int(os.environ.get("TASK0_TRAIN_SUBJECT_LIMIT", "16"))
+    validation_subject_limit: int = int(
+        os.environ.get("TASK0_VALIDATION_SUBJECT_LIMIT", "16")
+    )
+    test_subject_limit: int = int(os.environ.get("TASK0_TEST_SUBJECT_LIMIT", "16"))
     smoke_raw_samples_per_subject: int = 16
-    single_test_subject: str = "p00"
+    single_test_subject: str = os.environ.get("TASK0_TEST_SUBJECT", "p00")
     require_3000_samples_per_subject: bool = True
-    run_preprocessing: bool = True
+    run_preprocessing: bool = os.environ.get("TASK0_RUN_PREPROCESSING", "true").lower() in {
+        "1",
+        "true",
+        "yes",
+    }
     resume: bool = True
     keep_resume_checkpoint_after_completion: bool = False
     log_every_steps: int = 25
     bootstrap_samples: int = 2_000
     latency_warmup_steps: int = 10
     latency_measurement_steps: int = 50
-    enable_wandb: bool = True
-    wandb_required: bool = False
+    enable_wandb: bool = os.environ.get("TASK0_ENABLE_WANDB", "true").lower() in {
+        "1",
+        "true",
+        "yes",
+    }
+    wandb_required: bool = os.environ.get("TASK0_WANDB_REQUIRED", "false").lower() in {
+        "1",
+        "true",
+        "yes",
+    }
     wandb_secret_label: str = "wandb_api"
     wandb_project: str = "diploma-gaze-estimation"
     wandb_entity: str | None = None
@@ -138,27 +195,97 @@ class ExperimentConfig:
 
 
 CONFIG = ExperimentConfig()
-if CONFIG.run_mode not in {"smoke", "single_fold", "full_lopo"}:
+if CONFIG.run_mode not in {"smoke", "single_fold", "lopo_shard", "full_lopo"}:
     raise ValueError(f"Unsupported run_mode: {CONFIG.run_mode}")
+if CONFIG.run_mode == "lopo_shard" and not CONFIG.test_subjects_csv:
+    raise ValueError("lopo_shard requires TASK0_TEST_SUBJECTS")
+if CONFIG.fine_tune_strategy not in {"full", "head_only", "last_n_blocks"}:
+    raise ValueError(f"Unsupported fine_tune_strategy: {CONFIG.fine_tune_strategy}")
+if CONFIG.trainable_last_blocks < 1:
+    raise ValueError("trainable_last_blocks must be positive")
+if CONFIG.backbone_learning_rate <= 0 or CONFIG.head_learning_rate <= 0:
+    raise ValueError("Learning rates must be positive")
+if not 0.0 <= CONFIG.warmup_fraction < 1.0:
+    raise ValueError("warmup_fraction must be in [0, 1)")
 if CONFIG.gradient_accumulation_steps < 1:
     raise ValueError("gradient_accumulation_steps must be positive")
+if CONFIG.early_stopping_patience is not None and CONFIG.early_stopping_patience < 1:
+    raise ValueError("early_stopping_patience must be positive or None")
+if CONFIG.early_stopping_min_delta_deg < 0:
+    raise ValueError("early_stopping_min_delta_deg must be non-negative")
 if CONFIG.log_every_steps < 1 or CONFIG.wandb_log_every_steps < 1:
     raise ValueError("Logging intervals must be positive")
+if CONFIG.batch_size < 1 or CONFIG.eval_batch_size < 1:
+    raise ValueError("Batch sizes must be positive")
+if CONFIG.num_workers < 0:
+    raise ValueError("num_workers must be non-negative")
+if CONFIG.num_workers > 0 and CONFIG.prefetch_factor < 1:
+    raise ValueError("prefetch_factor must be positive when workers are enabled")
+if min(
+    CONFIG.train_subject_limit,
+    CONFIG.validation_subject_limit,
+    CONFIG.test_subject_limit,
+) < 1:
+    raise ValueError("Smoke subject limits must be positive")
 
 IS_KAGGLE = Path("/kaggle").is_dir()
 PROJECT_ROOT = Path(CONFIG.project_root).expanduser().resolve()
 RUNTIME_ROOT = Path(CONFIG.runtime_root).expanduser().resolve()
-UNIGAZE_REPO = RUNTIME_ROOT / "external" / "UniGaze"
+UNIGAZE_REPO = (
+    Path(CONFIG.unigaze_repository_root).expanduser().resolve()
+    if CONFIG.unigaze_repository_root is not None
+    else RUNTIME_ROOT / "external" / "UniGaze"
+)
 UNIGAZE_PACKAGE_ROOT = UNIGAZE_REPO / "unigaze"
 OFFLINE_WHEELHOUSE = RUNTIME_ROOT / "external" / "wheelhouse"
 RAW_DATA_ROOT = RUNTIME_ROOT / "data" / "raw" / "MPIIFaceGaze"
-NORMALIZED_DATA_ROOT = (
-    RUNTIME_ROOT / "data" / "processed" / "mpiifacegaze_unigaze"
-)
-MAE_CHECKPOINT = (
+
+
+def resolve_normalized_data_root(configured_root: str | None) -> Path:
+    default_root = RUNTIME_ROOT / "data" / "processed" / "mpiifacegaze_unigaze"
+    requested_root = (
+        Path(configured_root).expanduser().resolve()
+        if configured_root is not None
+        else default_root
+    )
+    if requested_root.is_dir() or not IS_KAGGLE or CONFIG.run_preprocessing:
+        return requested_root
+
+    expected_names = tuple(f"p{i:02d}.h5" for i in range(15))
+    candidates = sorted(
+        {
+            path.parent.resolve()
+            for path in Path("/kaggle/input").rglob("p00.h5")
+            if all((path.parent / name).is_file() for name in expected_names)
+        }
+    )
+    if len(candidates) == 1:
+        print(
+            "Configured normalized_data_root is unavailable; "
+            f"using attached Kaggle input: {candidates[0]}"
+        )
+        return candidates[0]
+    raise FileNotFoundError(
+        "Configured normalized_data_root does not exist and automatic Kaggle "
+        "input discovery did not find exactly one directory containing "
+        f"p00.h5-p14.h5. Configured: {requested_root}; candidates: {candidates}"
+    )
+
+
+NORMALIZED_DATA_ROOT = resolve_normalized_data_root(CONFIG.normalized_data_root)
+DEFAULT_MAE_CHECKPOINT = (
     RUNTIME_ROOT / "models" / "pretrained" / "mae_b16_checkpoint-299.pth"
 )
-OUTPUT_BASE = PROJECT_ROOT / "outputs" / "task0_unigaze_b16"
+MAE_CHECKPOINT = (
+    Path(CONFIG.pretrained_checkpoint).expanduser().resolve()
+    if CONFIG.pretrained_checkpoint is not None
+    else DEFAULT_MAE_CHECKPOINT
+)
+OUTPUT_BASE = (
+    Path(CONFIG.output_base).expanduser().resolve()
+    if CONFIG.output_base is not None
+    else PROJECT_ROOT / "outputs" / "task0_unigaze_b16"
+)
 SUBJECTS = tuple(f"p{i:02d}" for i in range(15))
 SMOKE_SUBJECTS = ("p00", "p01", "p02")
 ACTIVE_SUBJECTS = SMOKE_SUBJECTS if CONFIG.run_mode == "smoke" else SUBJECTS
@@ -180,7 +307,7 @@ if NOTEBOOK_SOURCE_SHA256.startswith("__"):
         raise RuntimeError("Notebook source hash was not injected during export")
     NOTEBOOK_SOURCE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 RUN_STARTED_AT = datetime.now(timezone.utc)
-RUN_ID = (
+RUN_ID = CONFIG.run_id or (
     f"{RUN_STARTED_AT.strftime('%Y%m%dT%H%M%SZ')}_{CONFIG.run_mode}_"
     f"c{CONFIG_HASH[:8]}_s{NOTEBOOK_SOURCE_SHA256[:8]}"
 )
@@ -305,6 +432,11 @@ if IS_KAGGLE:
             ["git", "-C", str(UNIGAZE_REPO), "checkout", "--detach", "FETCH_HEAD"]
         )
 
+    if not MAE_CHECKPOINT.is_file() and CONFIG.pretrained_checkpoint is not None:
+        raise FileNotFoundError(
+            "TASK0_PRETRAINED_CHECKPOINT does not exist: "
+            f"{MAE_CHECKPOINT}"
+        )
     if not MAE_CHECKPOINT.is_file():
         import gdown
 
@@ -436,6 +568,11 @@ environment = {
     ),
     "checkpoint_path": str(MAE_CHECKPOINT),
     "checkpoint_sha256": sha256_file(MAE_CHECKPOINT),
+    "checkpoint_source": (
+        "task1_gazegene_backbone"
+        if CONFIG.pretrained_checkpoint is not None
+        else "official_mae_b16"
+    ),
     "notebook_source_sha256": NOTEBOOK_SOURCE_SHA256,
     "packages": {
         distribution: package_version(distribution)
@@ -471,6 +608,15 @@ initial_manifest = {
 (RUN_DIR / "run_manifest.json").write_text(
     json.dumps(initial_manifest, indent=2), encoding="utf-8"
 )
+
+if os.environ.get("TASK0_SETUP_ONLY", "false").lower() in {"1", "true", "yes"}:
+    initial_manifest["status"] = "setup_complete"
+    initial_manifest["finished_at"] = datetime.now(timezone.utc).isoformat()
+    (RUN_DIR / "run_manifest.json").write_text(
+        json.dumps(initial_manifest, indent=2), encoding="utf-8"
+    )
+    print("Task 0 shared runtime setup completed; training was intentionally skipped.")
+    raise SystemExit(0)
 
 # %% [markdown]
 # ## 3. Official MPIIFaceGaze download and preprocessing
@@ -548,6 +694,11 @@ def make_smoke_raw_view(source: Path) -> Path:
 
 
 if CONFIG.run_preprocessing:
+    if CONFIG.normalized_data_root is not None:
+        raise ValueError(
+            "Set run_preprocessing=False when normalized_data_root points to a "
+            "prepared read-only dataset"
+        )
     download_raw_dataset()
 
 PREPROCESS_RAW_ROOT = (
@@ -789,14 +940,14 @@ def make_loader(
         "batch_size": batch_size,
         "shuffle": shuffle,
         "num_workers": CONFIG.num_workers,
-        "pin_memory": True,
+        "pin_memory": CONFIG.pin_memory,
         "drop_last": shuffle,
         "worker_init_fn": seed_worker,
         "generator": generator,
-        "persistent_workers": CONFIG.num_workers > 0,
+        "persistent_workers": CONFIG.num_workers > 0 and CONFIG.persistent_workers,
     }
     if CONFIG.num_workers > 0:
-        kwargs["prefetch_factor"] = 2
+        kwargs["prefetch_factor"] = CONFIG.prefetch_factor
     return DataLoader(**kwargs)
 
 
@@ -875,7 +1026,13 @@ def initialize_wandb() -> Any | None:
                 "source_sha256": NOTEBOOK_SOURCE_SHA256,
                 "unigaze_revision": UNIGAZE_REVISION,
             },
-            tags=["task0", "unigaze", "mpiifacegaze", CONFIG.run_mode],
+            tags=[
+                "task0",
+                "unigaze",
+                "mpiifacegaze",
+                CONFIG.run_mode,
+                CONFIG.fine_tune_strategy,
+            ],
             notes=(
                 "Identity-disjoint Task 0 run. Smoke metrics validate plumbing "
                 "only and are not benchmark results."
@@ -1017,13 +1174,23 @@ def optimizer_to(optimizer: torch.optim.Optimizer, device: torch.device) -> None
                 state[key] = value.to(device)
 
 # %% [markdown]
-# ## 6. Full-model training and evaluation functions
+# ## 6. Training and evaluation functions
 #
-# Every parameter is trainable. The checkpoint selector is validation mean
-# angular error. Test evaluation happens once, after the best validation
-# checkpoint has been restored.
+# The fine-tuning strategy explicitly controls whether only ``gaze_fc``, the
+# final transformer blocks, or the entire model is trainable. The checkpoint
+# selector is validation mean angular error. Test evaluation happens once,
+# after the best validation checkpoint has been restored.
 
 # %%
+def final_vit_norm(model: nn.Module) -> nn.Module:
+    norm = getattr(model.vit, "norm", None)
+    if norm is None:
+        norm = getattr(model.vit, "fc_norm", None)
+    if norm is None:
+        raise AttributeError("UniGaze ViT exposes neither norm nor fc_norm")
+    return norm
+
+
 def make_model() -> nn.Module:
     model = MAE_Gaze(
         model_type=CONFIG.model_type,
@@ -1032,13 +1199,98 @@ def make_model() -> nn.Module:
         custom_pretrained_path=str(MAE_CHECKPOINT),
     ).to(DEVICE)
     for parameter in model.parameters():
-        parameter.requires_grad_(True)
+        parameter.requires_grad_(CONFIG.fine_tune_strategy == "full")
+    if CONFIG.fine_tune_strategy in {"head_only", "last_n_blocks"}:
+        for parameter in model.gaze_fc.parameters():
+            parameter.requires_grad_(True)
+    if CONFIG.fine_tune_strategy == "last_n_blocks":
+        if CONFIG.trainable_last_blocks > len(model.vit.blocks):
+            raise ValueError(
+                f"Requested {CONFIG.trainable_last_blocks} trainable blocks, "
+                f"but model has {len(model.vit.blocks)}"
+            )
+        for block in model.vit.blocks[-CONFIG.trainable_last_blocks :]:
+            for parameter in block.parameters():
+                parameter.requires_grad_(True)
+        for parameter in final_vit_norm(model).parameters():
+            parameter.requires_grad_(True)
     trainable = sum(parameter.numel() for parameter in model.parameters() if parameter.requires_grad)
     total = sum(parameter.numel() for parameter in model.parameters())
-    if trainable != total:
-        raise RuntimeError(f"Expected full fine-tuning, trainable={trainable}, total={total}")
-    LOGGER.info("Model parameters: trainable=%d total=%d", trainable, total)
+    if trainable <= 0:
+        raise RuntimeError("Fine-tuning strategy left no trainable parameters")
+    LOGGER.info(
+        "Model parameters: strategy=%s trainable=%d total=%d fraction=%.4f",
+        CONFIG.fine_tune_strategy,
+        trainable,
+        total,
+        trainable / total,
+    )
     return model
+
+
+def set_model_training_mode(model: nn.Module) -> None:
+    model.train()
+    if CONFIG.fine_tune_strategy == "head_only":
+        model.vit.eval()
+    elif CONFIG.fine_tune_strategy == "last_n_blocks":
+        model.vit.eval()
+        for block in model.vit.blocks[-CONFIG.trainable_last_blocks :]:
+            block.train()
+        final_vit_norm(model).train()
+    model.gaze_fc.train()
+
+
+def make_optimizer(model: nn.Module) -> torch.optim.Optimizer:
+    head_parameters = [
+        parameter for parameter in model.gaze_fc.parameters() if parameter.requires_grad
+    ]
+    head_ids = {id(parameter) for parameter in head_parameters}
+    backbone_parameters = [
+        parameter
+        for parameter in model.parameters()
+        if parameter.requires_grad and id(parameter) not in head_ids
+    ]
+    parameter_groups: list[dict[str, Any]] = []
+    if backbone_parameters:
+        parameter_groups.append(
+            {
+                "params": backbone_parameters,
+                "lr": CONFIG.backbone_learning_rate,
+                "group_name": "backbone",
+            }
+        )
+    parameter_groups.append(
+        {
+            "params": head_parameters,
+            "lr": CONFIG.head_learning_rate,
+            "group_name": "head",
+        }
+    )
+    return torch.optim.AdamW(parameter_groups, weight_decay=CONFIG.weight_decay)
+
+
+def optimizer_learning_rates(
+    optimizer: torch.optim.Optimizer,
+) -> dict[str, float]:
+    return {
+        str(group.get("group_name", f"group_{index}")): float(group["lr"])
+        for index, group in enumerate(optimizer.param_groups)
+    }
+
+
+def make_scheduler(
+    optimizer: torch.optim.Optimizer, total_updates: int
+) -> torch.optim.lr_scheduler.LRScheduler:
+    warmup_updates = int(round(total_updates * CONFIG.warmup_fraction))
+
+    def multiplier(update: int) -> float:
+        if warmup_updates > 0 and update < warmup_updates:
+            return max((update + 1) / warmup_updates, 1.0 / warmup_updates)
+        decay_updates = max(total_updates - warmup_updates, 1)
+        progress = min(max((update - warmup_updates) / decay_updates, 0.0), 1.0)
+        return 0.5 * (1.0 + math.cos(math.pi * progress))
+
+    return torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=multiplier)
 
 
 def make_grad_scaler() -> Any:
@@ -1056,9 +1308,8 @@ def amp_optimizer_step(
     """Run one AMP optimizer step and advance the LR schedule only on success.
 
     ``GradScaler`` skips ``optimizer.step()`` when it detects an overflow and
-    lowers its scale. Advancing ``OneCycleLR`` on such a skipped update makes
-    the learning-rate schedule run ahead of the actual parameter updates and
-    triggers PyTorch's scheduler-order warning on the first overflow.
+    lowers its scale. Advancing the learning-rate schedule on such a skipped
+    update makes it run ahead of the actual parameter updates.
 
     Returns ``True`` when the optimizer update was executed and ``False`` when
     AMP skipped it.
@@ -1082,7 +1333,7 @@ def train_one_epoch(
     epoch: int,
     fold: str,
 ) -> dict[str, float]:
-    model.train()
+    set_model_training_mode(model)
     optimizer.zero_grad(set_to_none=True)
     loss_sum = 0.0
     angular_sum = 0.0
@@ -1130,6 +1381,7 @@ def train_one_epoch(
         angular_sum += float(batch_errors.sum())
         sample_count += batch_size
         if step % CONFIG.wandb_log_every_steps == 0 or step == len(loader):
+            learning_rates = optimizer_learning_rates(optimizer)
             wandb_log(
                 {
                     "train/fold": fold,
@@ -1143,6 +1395,10 @@ def train_one_epoch(
                     "train/running_loss_rad": loss_sum / sample_count,
                     "train/running_angular_error_deg": angular_sum / sample_count,
                     "train/learning_rate": optimizer.param_groups[0]["lr"],
+                    **{
+                        f"train/learning_rate_{name}": value
+                        for name, value in learning_rates.items()
+                    },
                     "train/amp_scale": float(scaler.get_scale()),
                     "system/gpu_memory_allocated_gib": (
                         torch.cuda.memory_allocated() / (1024**3)
@@ -1168,6 +1424,10 @@ def train_one_epoch(
         "epoch_seconds": time.perf_counter() - start,
         "skipped_optimizer_steps": float(skipped_optimizer_steps),
         "learning_rate": float(optimizer.param_groups[0]["lr"]),
+        **{
+            f"learning_rate_{name}": value
+            for name, value in optimizer_learning_rates(optimizer).items()
+        },
     }
 
 
@@ -1259,12 +1519,35 @@ def benchmark_inference(model: nn.Module, batch: Tensor) -> dict[str, float]:
 
 def plot_fold_history(history: pd.DataFrame, destination: Path) -> None:
     figure, axes = plt.subplots(1, 2, figsize=(13, 4.5))
-    axes[0].plot(history["epoch"], history["train_loss"], marker="o", label="train")
+    train_loss_column = (
+        "train_eval_loss" if "train_eval_loss" in history else "train_loss"
+    )
+    axes[0].plot(
+        history["epoch"],
+        history[train_loss_column],
+        marker="o",
+        label="train (eval mode)" if train_loss_column == "train_eval_loss" else "train",
+    )
     axes[0].plot(history["epoch"], history["validation_loss"], marker="o", label="validation")
     axes[0].set(title="L1 loss", xlabel="epoch", ylabel="radians")
     axes[0].legend()
     axes[0].grid(alpha=0.25)
-    axes[1].plot(history["epoch"], history["train_mean_deg"], marker="o", label="train")
+    if "train_eval_mean_deg" in history:
+        axes[1].plot(
+            history["epoch"],
+            history["train_eval_mean_deg"],
+            marker="o",
+            label="train (eval mode)",
+        )
+    if "train_mean_deg" in history:
+        axes[1].plot(
+            history["epoch"],
+            history["train_mean_deg"],
+            marker=".",
+            linestyle="--",
+            alpha=0.6,
+            label="train (online during updates)",
+        )
     axes[1].plot(history["epoch"], history["validation_mean_deg"], marker="o", label="validation")
     axes[1].set(title="Angular error", xlabel="epoch", ylabel="degrees")
     axes[1].legend()
@@ -1362,6 +1645,12 @@ def run_fold(test_subject: str) -> dict[str, Any]:
     train_loader = make_loader(
         train_dataset, CONFIG.batch_size, shuffle=True, generator=loader_generator
     )
+    train_eval_loader = make_loader(
+        train_dataset,
+        CONFIG.eval_batch_size,
+        shuffle=False,
+        generator=torch.Generator().manual_seed(fold_seed + 3),
+    )
     validation_loader = make_loader(
         validation_dataset,
         CONFIG.eval_batch_size,
@@ -1389,24 +1678,16 @@ def run_fold(test_subject: str) -> dict[str, Any]:
             if CONFIG.wandb_required:
                 raise
             LOGGER.warning("W&B gradient watch disabled (%s)", type(error).__name__)
-    optimizer = torch.optim.Adam(
-        model.parameters(), lr=CONFIG.learning_rate, weight_decay=CONFIG.weight_decay
-    )
+    optimizer = make_optimizer(model)
     updates_per_epoch = math.ceil(
         len(train_loader) / CONFIG.gradient_accumulation_steps
     )
-    scheduler = torch.optim.lr_scheduler.OneCycleLR(
-        optimizer,
-        max_lr=CONFIG.learning_rate,
-        epochs=epochs,
-        steps_per_epoch=updates_per_epoch,
-        div_factor=CONFIG.one_cycle_div_factor,
-        final_div_factor=CONFIG.one_cycle_final_div_factor,
-    )
+    scheduler = make_scheduler(optimizer, total_updates=epochs * updates_per_epoch)
     scaler = make_grad_scaler()
     start_epoch = 1
     best_validation = float("inf")
     best_epoch = 0
+    epochs_without_improvement = 0
     history_rows: list[dict[str, Any]] = []
 
     if CONFIG.resume and resume_path.is_file():
@@ -1425,8 +1706,61 @@ def run_fold(test_subject: str) -> dict[str, Any]:
         start_epoch = int(checkpoint["epoch"]) + 1
         best_validation = float(checkpoint["best_validation_mean_deg"])
         best_epoch = int(checkpoint["best_epoch"])
+        epochs_without_improvement = int(
+            checkpoint.get("epochs_without_improvement", 0)
+        )
         history_rows = list(checkpoint["history"])
         LOGGER.info("Resumed %s from epoch %d", test_subject, start_epoch)
+
+    if start_epoch == 1 and CONFIG.evaluate_pretrained_epoch_zero:
+        initial_train_metrics, _ = evaluate(
+            model, train_eval_loader, "training_subjects", fold_seed - 2
+        )
+        initial_validation_metrics, _ = evaluate(
+            model, validation_loader, validation_subject, fold_seed - 1
+        )
+        history_rows.append(
+            {
+                "test_subject": test_subject,
+                "validation_subject": validation_subject,
+                "epoch": 0,
+                "train_loss": float("nan"),
+                "train_mean_deg": float("nan"),
+                "train_eval_loss": initial_train_metrics["l1_loss_rad"],
+                "train_eval_mean_deg": initial_train_metrics["mean_deg"],
+                "validation_loss": initial_validation_metrics["l1_loss_rad"],
+                "validation_mean_deg": initial_validation_metrics["mean_deg"],
+                "validation_median_deg": initial_validation_metrics["median_deg"],
+                "epoch_seconds": 0.0,
+                "skipped_optimizer_steps": 0.0,
+                "learning_rate": float(optimizer.param_groups[0]["lr"]),
+                "peak_gpu_memory_gib": torch.cuda.max_memory_allocated() / (1024**3),
+            }
+        )
+        best_validation = initial_validation_metrics["mean_deg"]
+        best_epoch = 0
+        atomic_csv_write(pd.DataFrame(history_rows), history_path)
+        atomic_torch_save(
+            {
+                "model_state": {
+                    key: value.detach().cpu()
+                    for key, value in model.state_dict().items()
+                },
+                "epoch": 0,
+                "validation_mean_deg": best_validation,
+                "config_hash": CONFIG_HASH,
+                "source_sha256": NOTEBOOK_SOURCE_SHA256,
+                "test_subject": test_subject,
+                "validation_subject": validation_subject,
+            },
+            best_model_path,
+        )
+        LOGGER.info(
+            "fold=%s epoch=0 pretrained train_eval=%.4f° validation=%.4f°",
+            test_subject,
+            initial_train_metrics["mean_deg"],
+            initial_validation_metrics["mean_deg"],
+        )
 
     torch.cuda.reset_peak_memory_stats()
     fold_start = time.perf_counter()
@@ -1437,6 +1771,14 @@ def run_fold(test_subject: str) -> dict[str, Any]:
         validation_metrics, _ = evaluate(
             model, validation_loader, validation_subject, fold_seed + epoch
         )
+        train_eval_metrics = None
+        if CONFIG.evaluate_train_after_each_epoch:
+            train_eval_metrics, _ = evaluate(
+                model,
+                train_eval_loader,
+                "training_subjects",
+                fold_seed + 1_000 + epoch,
+            )
         row = {
             "test_subject": test_subject,
             "validation_subject": validation_subject,
@@ -1445,14 +1787,28 @@ def run_fold(test_subject: str) -> dict[str, Any]:
             "validation_loss": validation_metrics["l1_loss_rad"],
             "validation_mean_deg": validation_metrics["mean_deg"],
             "validation_median_deg": validation_metrics["median_deg"],
+            "train_eval_loss": (
+                train_eval_metrics["l1_loss_rad"]
+                if train_eval_metrics is not None
+                else float("nan")
+            ),
+            "train_eval_mean_deg": (
+                train_eval_metrics["mean_deg"]
+                if train_eval_metrics is not None
+                else float("nan")
+            ),
             "peak_gpu_memory_gib": torch.cuda.max_memory_allocated() / (1024**3),
         }
         history_rows.append(row)
         atomic_csv_write(pd.DataFrame(history_rows), history_path)
-        improved = validation_metrics["mean_deg"] < best_validation
+        improved = (
+            validation_metrics["mean_deg"]
+            < best_validation - CONFIG.early_stopping_min_delta_deg
+        )
         if improved:
             best_validation = validation_metrics["mean_deg"]
             best_epoch = epoch
+            epochs_without_improvement = 0
             atomic_torch_save(
                 {
                     "model_state": {
@@ -1468,6 +1824,8 @@ def run_fold(test_subject: str) -> dict[str, Any]:
                 },
                 best_model_path,
             )
+        else:
+            epochs_without_improvement += 1
         atomic_torch_save(
             {
                 "model_state": model.state_dict(),
@@ -1479,6 +1837,7 @@ def run_fold(test_subject: str) -> dict[str, Any]:
                 "epoch": epoch,
                 "best_validation_mean_deg": best_validation,
                 "best_epoch": best_epoch,
+                "epochs_without_improvement": epochs_without_improvement,
                 "history": history_rows,
                 "config_hash": CONFIG_HASH,
                 "source_sha256": NOTEBOOK_SOURCE_SHA256,
@@ -1510,12 +1869,31 @@ def run_fold(test_subject: str) -> dict[str, Any]:
                 "validation/improved": int(improved),
                 "train/epoch_loss_rad": train_metrics["train_loss"],
                 "train/epoch_angular_error_deg": train_metrics["train_mean_deg"],
+                "train/eval_angular_error_deg": (
+                    train_eval_metrics["mean_deg"]
+                    if train_eval_metrics is not None
+                    else float("nan")
+                ),
                 "train/epoch_seconds": train_metrics["epoch_seconds"],
                 "system/peak_gpu_memory_gib": (
                     torch.cuda.max_memory_allocated() / (1024**3)
                 ),
             }
         )
+        if (
+            CONFIG.early_stopping_patience is not None
+            and epochs_without_improvement >= CONFIG.early_stopping_patience
+        ):
+            LOGGER.info(
+                "Early stopping fold=%s after epoch=%d: no validation improvement "
+                "for %d epochs; best=%.4f°@%d",
+                test_subject,
+                epoch,
+                epochs_without_improvement,
+                best_validation,
+                best_epoch,
+            )
+            break
 
     if not best_model_path.is_file():
         raise RuntimeError(f"No best model checkpoint was produced for {test_subject}")
@@ -1548,11 +1926,29 @@ def run_fold(test_subject: str) -> dict[str, Any]:
         "test_subject": test_subject,
         "validation_subject": validation_subject,
         "training_subjects": training_subjects,
+        "fine_tune_strategy": CONFIG.fine_tune_strategy,
+        "trainable_last_blocks": (
+            CONFIG.trainable_last_blocks
+            if CONFIG.fine_tune_strategy == "last_n_blocks"
+            else None
+        ),
+        "backbone_learning_rate": CONFIG.backbone_learning_rate,
+        "head_learning_rate": CONFIG.head_learning_rate,
+        "weight_decay": CONFIG.weight_decay,
         "train_samples": len(train_dataset),
         "validation_samples": len(validation_dataset),
         "test_samples": len(test_dataset),
         "best_epoch": best_epoch,
         "best_validation_mean_deg": best_validation,
+        "epochs_completed": int(max(row["epoch"] for row in history_rows)),
+        "pretrained_train_mean_deg": float(history_rows[0]["train_eval_mean_deg"])
+        if history_rows and history_rows[0]["epoch"] == 0
+        else None,
+        "pretrained_validation_mean_deg": float(
+            history_rows[0]["validation_mean_deg"]
+        )
+        if history_rows and history_rows[0]["epoch"] == 0
+        else None,
         "test": test_metrics,
         "constant_baseline": constant_metrics,
         "latency": latency,
@@ -1610,7 +2006,7 @@ def run_fold(test_subject: str) -> dict[str, Any]:
             LOGGER.warning("Could not remove W&B model hooks (%s)", type(error).__name__)
 
     del model, optimizer, scheduler, scaler
-    del train_loader, validation_loader, test_loader
+    del train_loader, train_eval_loader, validation_loader, test_loader
     del train_dataset, validation_dataset, test_dataset
     torch.cuda.empty_cache()
     gc.collect()
@@ -1621,6 +2017,8 @@ def run_fold(test_subject: str) -> dict[str, Any]:
 #
 # - `smoke`: one short epoch and three small identity-disjoint subsets for QA;
 # - `single_fold`: all samples for `p00` as test;
+# - `lopo_shard`: an explicit resumable subset of folds from
+#   `TASK0_TEST_SUBJECTS`;
 # - `full_lopo`: all 15 identity-disjoint folds.
 #
 # Completed folds are skipped on rerun. An interrupted active fold resumes from
@@ -1630,6 +2028,17 @@ def run_fold(test_subject: str) -> dict[str, Any]:
 # %%
 if CONFIG.run_mode in {"smoke", "single_fold"}:
     test_subjects = [CONFIG.single_test_subject]
+elif CONFIG.run_mode == "lopo_shard":
+    test_subjects = [
+        subject.strip()
+        for subject in (CONFIG.test_subjects_csv or "").split(",")
+        if subject.strip()
+    ]
+    unknown_subjects = sorted(set(test_subjects) - set(SUBJECTS))
+    if unknown_subjects:
+        raise ValueError(f"Unknown TASK0_TEST_SUBJECTS: {unknown_subjects}")
+    if len(test_subjects) != len(set(test_subjects)):
+        raise ValueError("TASK0_TEST_SUBJECTS contains duplicates")
 else:
     test_subjects = list(SUBJECTS)
 
