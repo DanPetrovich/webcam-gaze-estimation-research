@@ -85,6 +85,49 @@ enough.
 - The next experiment should test stratified target-region coverage rather than
   increasing affine flexibility on randomly drawn samples.
 
+## Target-diversity and stratified-coverage follow-up
+
+The existing global target-diversity selector was re-evaluated by slice. It
+reveals a real tradeoff that is hidden by the overall mean: mean-offset target
+diversity is better than random Huber in the peripheral slice by 0.1669° at
+`k=9` (95% CI 0.0042–0.3137°) and by 0.1577° at `k=16` (95% CI
+0.0277–0.2975°). At `k=16`, MAP target diversity has a similar 0.1357°
+peripheral advantage (95% CI 0.0191–0.2589°). Central and mid-range results do
+not improve, explaining why target diversity did not win the overall metric.
+
+A prespecified region-stratified selector then allocated calibration samples
+almost equally across central, mid, and peripheral regions and used
+within-region farthest-first selection plus the same LOSO-tuned Huber fit. This
+did **not** reproduce the peripheral benefit:
+
+| k | Overall advantage | Central | Mid | Peripheral |
+|---:|---:|---:|---:|---:|
+| 3 | 0.0044° | 0.0682° | 0.0304° | -0.1216° |
+| 5 | -0.0854° | 0.0525° | -0.0624° | **-0.2091°** |
+| 9 | -0.0986° | 0.1339° | -0.0884° | **-0.2935°** |
+| 16 | 0.0298° | **0.1452°** | 0.0343° | -0.0644° |
+
+Values are advantages over random Huber. The peripheral disadvantages are
+statistically supported at `k=5` (95% CI -0.4749–-0.0013°) and `k=9`
+(-0.5275–-0.0938°). At `k=16`, only the central improvement is resolved (95%
+CI 0.0938–0.2009°); overall and peripheral comparisons include zero.
+
+The peripheral gain from global target diversity is therefore not explained by
+simply increasing the peripheral sample quota. The particular global geometry
+changes the estimated subject offset in a way that favours peripheral targets
+at the expense of the centre. Equal region quotas create a different but still
+undesirable spatial tradeoff.
+
+Decision update:
+
+- do not adopt equal region quotas;
+- retain global target diversity only as a diagnostic/peripheral-optimised
+  comparator, not the general policy;
+- do not tune region quotas post hoc on these subjects;
+- a genuine spatial solution must model location-dependent correction or route
+  corrections using an observable prediction-space variable, then validate the
+  routing without ground-truth-region leakage.
+
 ## Threats to validity
 
 - Eccentricity is relative to the camera forward axis, not physical screen
@@ -117,4 +160,26 @@ python3 scripts/evaluate_task1_ridge_robustness.py \
   --hybrid-slice-results outputs/task1_hybrid_robustness \
   --config configs/task1_ridge_robustness.toml \
   --output-dir outputs/task1_ridge_robustness
+```
+
+Global target-diversity slices:
+
+```bash
+python3 scripts/evaluate_task1_target_diversity_robustness.py \
+  --predictions outputs/task0_lopo_baseline/all_predictions.csv \
+  --selected-samples outputs/task1_target_diversity/selected_samples.csv \
+  --hybrid-slice-results outputs/task1_hybrid_robustness \
+  --config configs/task1_target_diversity_robustness.toml \
+  --output-dir outputs/task1_target_diversity_robustness
+```
+
+Region-stratified coverage:
+
+```bash
+python3 scripts/run_task1_stratified_target_coverage.py \
+  --predictions outputs/task0_lopo_baseline/all_predictions.csv \
+  --robust-results outputs/task1_robust_offset \
+  --hybrid-slice-results outputs/task1_hybrid_robustness \
+  --config configs/task1_stratified_target_coverage.toml \
+  --output-dir outputs/task1_stratified_target_coverage
 ```

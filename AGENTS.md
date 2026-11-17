@@ -99,7 +99,11 @@ Current execution status:
   the hybrid policy improves central, mid-range, and peripheral slices at every
   budget, but peripheral error remains 3.1506° at `k=16` and three subjects are
   harmed there at every budget. Ridge-affine does not repair the periphery and
-  is significantly worse than Huber there at `k=3,5,9`. Details are in
+  is significantly worse than Huber there at `k=3,5,9`. Global target diversity
+  does improve peripheral error at `k=9,16`, but trades away central/mid-range
+  performance. Prespecified equal region quotas fail to reproduce that benefit
+  and significantly worsen the periphery at `k=5,9`; do not tune or adopt them.
+  Details are in
   `docs/task1_mean_offset_baseline.md` and
   `docs/task1_ridge_affine_baseline.md` and
   `docs/task1_target_diversity_baseline.md` and
