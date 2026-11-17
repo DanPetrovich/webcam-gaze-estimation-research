@@ -1,0 +1,15 @@
+[protocol]
+name = "webcam_9point_v1"
+seed = 20261117
+rows = 3
+columns = 3
+margin_fraction = 0.10
+repetitions = 2
+settle_ms = 500
+capture_ms = 1500
+shuffle_within_repetition = true
+
+[privacy]
+manifest_contains_frames = false
+manifest_contains_biometrics = false
+raw_capture_retention = "not_configured_capture_is_out_of_scope"

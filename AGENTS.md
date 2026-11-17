@@ -128,6 +128,11 @@ Current execution status:
   3.9483–5.4158°), 0.1058° or 2.31% worse than the official-MAE initialization;
   it does not support a transfer benefit. Details are in
   `docs/task1_gazegene_full_result.md`.
+- Prepared — live-webcam validation scaffold: a deterministic normalized
+  3x3/two-repetition stimulus manifest, explicit top-left screen-coordinate
+  convention, screen geometry helpers, and privacy/metadata requirements are
+  implemented. This scaffold does not open a camera or constitute a live
+  validation result. Details are in `docs/live_webcam_calibration_protocol.md`.
 
 Treat this file as a living project guide. Update it when new materials establish
 a durable project-wide rule, constraint, convention, or decision. Keep temporary
