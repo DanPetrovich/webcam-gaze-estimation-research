@@ -1,0 +1,15 @@
+[experiment]
+name = "task1_mean_offset"
+seed = 20261112
+budgets = [1, 3, 5, 9, 16]
+random_draws = 100
+candidate_fraction = 0.20
+guard_fraction = 0.10
+bootstrap_replicates = 100000
+
+[protocol]
+duplicate_key = "target_and_prediction_angles"
+split_order = "minimum_sample_index"
+selectors = ["random", "fixed_uniform"]
+calibrators = ["mean_offset", "map_offset"]
+primary_metric = "subject_mean_angular_error_deg"

@@ -71,6 +71,29 @@ or transferred through the relay.
 | `best_full_model.pt` | 346,339,435 | `d24c6cee737cd12dbc66264538d28d8d4fd8a4e71caca69a24fd79d2e906a87b` |
 | `best_backbone_mae_format.pth` | 346,332,549 | `3e737772dad4f28d560487bc4b106cb6de2753ab37a181e011a5b67552c4a33f` |
 
+## Paired MPIIFaceGaze LOPO transfer result
+
+The follow-up experiment repeated all 15 frozen Task 0 LOPO folds with the
+GazeGene `best_backbone_mae_format.pth` initialization. The combined completion
+artifact reports `PASS`; both workers completed and all 45,000 samples from
+`p00`–`p14` are present. The backbone hash matches the recorded GazeGene
+checkpoint.
+
+| Metric | GazeGene-initialized LOPO |
+|---|---:|
+| Subject-macro mean | **4.6857°** |
+| Subject standard deviation | 1.5079° |
+| 95% subject-bootstrap CI | 3.9483–5.4158° |
+| Pooled sample mean | 4.6857° |
+| Pooled sample median | 4.4275° |
+
+The subject-macro mean is 0.1058°, or 2.31%, worse than the frozen Task 0
+official-MAE initialization at 4.5799°. The aggregate confidence intervals
+overlap substantially. A paired fold-level confidence interval for the
+difference has not yet been reconstructed locally, so this result must not be
+described as a statistically significant degradation. It does show that the
+tested GazeGene initialization provides no observed aggregate transfer benefit.
+
 ## Interpretation and next decision
 
 The experiment establishes a complete GazeGene pretraining artifact and a
@@ -80,11 +103,11 @@ error of 5.3430° is 0.7631° higher than the frozen Task 0 LOPO reference of
 fine-tuned on MPIIFaceGaze training identities in every fold, while this result
 uses no MPIIFaceGaze fitting at all.
 
-The transfer hypothesis remains unresolved until the same 15 MPIIFaceGaze LOPO
-folds are rerun with `best_backbone_mae_format.pth` as initialization and
-compared against the official-MAE initialization under identical splits,
-hyperparameters, seeds, and checkpoint-selection rules. That paired experiment
-is the next scientifically valid step.
+The paired LOPO experiment is now complete. Under the fixed splits,
+hyperparameters, seed, and checkpoint-selection rule, the GazeGene initialization
+did not improve MPIIFaceGaze subject-macro error. Further expensive transfer
+training is not the immediate priority; the project should return to the central
+few-shot calibration and sample-selection question.
 
 ## Operational caveat
 
@@ -108,5 +131,8 @@ the measured 16-hour duration plus evaluation margin.
   checkpoint choice may therefore be noisy.
 - MPIIFaceGaze contains upsampled observations, so 45,000 rows do not represent
   45,000 unique raw frames.
+- The paired LOPO aggregate is available, but the per-fold difference artifact
+  has not yet been copied into the local repository for a paired significance
+  analysis.
 - The run measures static-frame angular error, not calibrated screen-point
   accuracy, real-webcam latency, fixation detection, or robustness slices.

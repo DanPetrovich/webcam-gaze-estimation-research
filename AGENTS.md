@@ -60,14 +60,34 @@ Current execution status:
   The mean/MAP offset stage is complete: random 16-shot mean offset reduces the
   duplicate-safe evaluation subject mean from 4.6143° to 2.7123°, while MAP
   shrinkage is specifically beneficial for one-shot calibration. Ridge-affine
-  correction and sample-selection methods remain pending. Details are in
-  `docs/task1_mean_offset_baseline.md`.
-- Completed — GazeGene transfer preparation: the fixed 12-epoch MAE-B16 run
+  correction is also complete: random 16-shot ridge reaches 2.6861°, but its
+  0.0262° advantage over mean offset has a paired subject-bootstrap CI that
+  includes zero. The first sample-selection baseline is also complete:
+  target-space k-center diversity does not beat random selection at any tested
+  budget, although it beats fixed-uniform selection at `k=16`. Quality-aware
+  and combined quality/diversity selection remain pending. The prerequisite
+  aggregate quality/head-pose audit is complete on all 45,000 normalized
+  samples: simple signals distinguish injected blur, darkness, brightness, and
+  occlusion with AUC 0.9452–0.9973 without persisting images or per-sample
+  features. The first quality-aware selection comparison is also complete:
+  quality-then-target-diversity improves one-shot calibration by 0.3491° for
+  mean offset and 0.3257° for MAP versus random, with paired CIs above zero,
+  but becomes worse than random at `k=16`. Quality-only and pose-diversity
+  selection do not provide a general win. Reliability-weighted robust fitting
+  is the next step. Details are in
+  `docs/task1_mean_offset_baseline.md` and
+  `docs/task1_ridge_affine_baseline.md` and
+  `docs/task1_target_diversity_baseline.md` and
+  `docs/task1_quality_audit.md` and
+  `docs/task1_quality_selection_baseline.md`.
+- Completed — GazeGene transfer: the fixed 12-epoch MAE-B16 run
   selected epoch 11, reached 4.8366° GazeGene test subject-macro error, and
   reached 5.3430° on 15-subject MPIIFaceGaze zero-shot evaluation. Treat the
   latter as a cross-dataset reference, not a replacement for the 4.5799° Task 0
-  LOPO baseline. The next transfer experiment is a paired repeat of the frozen
-  Task 0 LOPO protocol initialized from the GazeGene backbone. Details are in
+  LOPO baseline. The paired frozen-protocol LOPO repeat initialized from the
+  GazeGene backbone reached 4.6857° (95% subject-bootstrap CI
+  3.9483–5.4158°), 0.1058° or 2.31% worse than the official-MAE initialization;
+  it does not support a transfer benefit. Details are in
   `docs/task1_gazegene_full_result.md`.
 
 Treat this file as a living project guide. Update it when new materials establish
