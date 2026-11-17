@@ -260,9 +260,13 @@ def select(
     candidates: dict[str, list[Candidate]], config: dict[str, Any]
 ) -> dict[str, Any]:
     maximum_budget = max(int(value) for value in config["experiment"]["budgets"])
-    gate_fraction = float(config["selection"]["quality_gate_fraction"])
+    gate_fractions = [
+        float(value) for value in config["selection"]["quality_gate_fractions"]
+    ]
     selections: dict[str, dict[str, list[dict[str, Any]]]] = {}
-    accepted_fractions = []
+    accepted_fractions: dict[float, list[float]] = {
+        value: [] for value in gate_fractions
+    }
     for subject, held_out in sorted(candidates.items()):
         training = [
             item
@@ -288,17 +292,25 @@ def select(
             ),
             center=(0.0, 0.0),
         )
-        accepted_count = max(maximum_budget, math.ceil(len(held_out) * gate_fraction))
-        accepted = high[:accepted_count]
-        accepted_fractions.append(accepted_count / len(held_out))
         methods = {
             "high_quality": high[:maximum_budget],
             "low_quality": low[:maximum_budget],
             "pose_diversity": pose,
-            "quality_then_target_diversity": target_farthest_first(
-                accepted, maximum_budget
-            ),
         }
+        gate_names = {
+            0.50: "quality_then_target_diversity",
+            0.75: "quality75_then_target_diversity",
+            0.90: "quality90_then_target_diversity",
+            0.95: "quality95_then_target_diversity",
+        }
+        for fraction in gate_fractions:
+            accepted_count = max(
+                maximum_budget, math.ceil(len(held_out) * fraction)
+            )
+            accepted_fractions[fraction].append(accepted_count / len(held_out))
+            methods[gate_names[fraction]] = target_farthest_first(
+                high[:accepted_count], maximum_budget
+            )
         selections[subject] = {
             method: [
                 {"group_id": item.group_id, "min_sample_index": item.sample_index}
@@ -312,7 +324,10 @@ def select(
         "subjects": len(selections),
         "maximum_budget": maximum_budget,
         "selectors": list(config["selection"]["selectors"]),
-        "quality_gate_fraction_mean": statistics.fmean(accepted_fractions),
+        "quality_gate_fraction_mean": {
+            str(fraction): statistics.fmean(values)
+            for fraction, values in accepted_fractions.items()
+        },
         "selections": selections,
         "privacy": "selected_group_ids_only_no_images_labels_or_features_returned",
     }

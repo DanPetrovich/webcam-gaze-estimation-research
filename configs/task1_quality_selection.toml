@@ -8,12 +8,15 @@ candidate_manifest_sha256 = "b2de22d9fe642700828950f06fadf037c8ed392c4cdf32feb9a
 bootstrap_replicates = 100000
 
 [selection]
-quality_gate_fraction = 0.50
+quality_gate_fractions = [0.50, 0.75, 0.90, 0.95]
 selectors = [
   "high_quality",
   "low_quality",
   "pose_diversity",
   "quality_then_target_diversity",
+  "quality75_then_target_diversity",
+  "quality90_then_target_diversity",
+  "quality95_then_target_diversity",
 ]
 quality_components = [
   "brightness_centrality",
