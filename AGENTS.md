@@ -91,7 +91,11 @@ Current execution status:
   now consolidated: soft weight 0.25 plus MAP at `k=1`, and random sampling
   plus leakage-safe Huber offset at `k>=3`. It improves over the matching
   ordinary random reference with paired CIs above zero at `k=1,3,5,9`; the
-  `k=16` Huber advantage remains inconclusive. Details are in
+  `k=16` Huber advantage remains inconclusive. A first uncertainty baseline is
+  also complete: within-calibration residual dispersion has near-zero
+  correlation with downstream error, and leakage-safe 80% coverage abstention
+  has no statistically supported gain at any budget. Do not use this score as
+  calibration confidence. Details are in
   `docs/task1_mean_offset_baseline.md` and
   `docs/task1_ridge_affine_baseline.md` and
   `docs/task1_target_diversity_baseline.md` and
@@ -100,7 +104,8 @@ Current execution status:
   `docs/task1_robust_offset_baseline.md` and
   `docs/task1_adaptive_quality_gate_baseline.md` and
   `docs/task1_soft_quality_selection_baseline.md` and
-  `docs/task1_hybrid_policy.md`.
+  `docs/task1_hybrid_policy.md` and
+  `docs/task1_calibration_reliability.md`.
 - Completed — GazeGene transfer: the fixed 12-epoch MAE-B16 run
   selected epoch 11, reached 4.8366° GazeGene test subject-macro error, and
   reached 5.3430° on 15-subject MPIIFaceGaze zero-shot evaluation. Treat the

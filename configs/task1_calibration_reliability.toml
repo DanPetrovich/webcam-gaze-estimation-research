@@ -1,0 +1,19 @@
+[experiment]
+name = "task1_calibration_reliability"
+seed = 20261112
+budgets = [3, 5, 9, 16]
+expected_subjects = 15
+expected_draws = 100
+target_coverage = 0.80
+bootstrap_replicates = 100000
+candidate_fraction = 0.20
+guard_fraction = 0.10
+maximum_iterations = 25
+tolerance = 1e-10
+
+[protocol]
+selector = "random"
+calibrator = "huber_residual_offset"
+reliability_score = "median_angular_residual_deviation_deg"
+threshold_fit = "other_14_subjects_score_quantile_only"
+primary_comparison = "accepted_attempt_mean_vs_all_attempt_mean"
