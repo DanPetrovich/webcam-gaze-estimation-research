@@ -9,6 +9,7 @@ bootstrap_replicates = 100000
 
 [selection]
 quality_gate_fractions = [0.50, 0.75, 0.90, 0.95]
+soft_quality_weights = [0.10, 0.25, 0.50, 0.75]
 selectors = [
   "high_quality",
   "low_quality",
@@ -17,6 +18,10 @@ selectors = [
   "quality75_then_target_diversity",
   "quality90_then_target_diversity",
   "quality95_then_target_diversity",
+  "soft_quality10_target_diversity",
+  "soft_quality25_target_diversity",
+  "soft_quality50_target_diversity",
+  "soft_quality75_target_diversity",
 ]
 quality_components = [
   "brightness_centrality",

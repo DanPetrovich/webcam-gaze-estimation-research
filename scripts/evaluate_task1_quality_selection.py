@@ -64,7 +64,9 @@ def aggregate(
                 gain_low, gain_high = baseline.bootstrap_mean_ci(
                     gains,
                     replicates=replicates,
-                    seed=baseline.stable_seed(seed, selector, budget, calibrator, "gain"),
+                    seed=baseline.stable_seed(
+                        seed, selector, budget, calibrator, "gain"
+                    ),
                 )
                 aggregates.append(
                     {
@@ -177,6 +179,7 @@ def main() -> None:
         "budgets": budgets,
         "selectors": selectors,
         "quality_gate_fraction_mean": selection["quality_gate_fraction_mean"],
+        "soft_quality_weights": selection.get("soft_quality_weights", []),
         "best_aggregate_result": min(
             aggregates,
             key=lambda row: float(row["subject_mean_calibrated_deg"]),

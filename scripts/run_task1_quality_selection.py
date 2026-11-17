@@ -11,9 +11,10 @@ import math
 import statistics
 import sys
 import tomllib
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import run_task1_quality_audit as quality_audit  # noqa: E402
@@ -183,7 +184,24 @@ def target_vector(item: Candidate) -> tuple[float, float, float]:
     )
 
 
-def target_farthest_first(candidates: list[Candidate], count: int) -> list[Candidate]:
+def angular_distance(left: tuple[float, ...], right: tuple[float, ...]) -> float:
+    cosine = sum(a * b for a, b in zip(left, right, strict=True))
+    return math.acos(max(-1.0, min(1.0, cosine)))
+
+
+def soft_quality_target_farthest_first(
+    candidates: list[Candidate],
+    count: int,
+    scores: dict[str, float],
+    quality_weight: float,
+) -> list[Candidate]:
+    """Balance target coverage and quality without rejecting candidates."""
+    if count <= 0 or count > len(candidates):
+        raise ValueError("Invalid soft-selection size")
+    if not 0.0 <= quality_weight <= 1.0:
+        raise ValueError("Quality weight must be between zero and one")
+    if set(scores) != {item.group_id for item in candidates}:
+        raise ValueError("Quality scores do not cover the candidates")
     pitch = statistics.fmean(item.target_pitch for item in candidates)
     yaw = statistics.fmean(item.target_yaw for item in candidates)
     center = (
@@ -191,31 +209,65 @@ def target_farthest_first(candidates: list[Candidate], count: int) -> list[Candi
         math.sin(pitch),
         math.cos(pitch) * math.cos(yaw),
     )
+    vectors = {item.group_id: target_vector(item) for item in candidates}
+    center_distances = {
+        item.group_id: angular_distance(vectors[item.group_id], center)
+        for item in candidates
+    }
+    maximum_center_distance = max(center_distances.values(), default=0.0)
 
-    def angular(left: tuple[float, ...], right: tuple[float, ...]) -> float:
-        cosine = sum(a * b for a, b in zip(left, right, strict=True))
-        return math.acos(max(-1.0, min(1.0, cosine)))
+    def centrality(item: Candidate) -> float:
+        if maximum_center_distance <= 0.0:
+            return 1.0
+        return 1.0 - center_distances[item.group_id] / maximum_center_distance
 
-    first = min(
+    first = max(
         candidates,
-        key=lambda item: (angular(target_vector(item), center), item.sample_index),
+        key=lambda item: (
+            (1.0 - quality_weight) * centrality(item)
+            + quality_weight * scores[item.group_id],
+            -item.sample_index,
+        ),
     )
     selected = [first]
     selected_ids = {first.group_id}
     while len(selected) < count:
+        remaining = [
+            value for value in candidates if value.group_id not in selected_ids
+        ]
+        minimum_distances = {
+            value.group_id: min(
+                angular_distance(vectors[value.group_id], vectors[chosen.group_id])
+                for chosen in selected
+            )
+            for value in remaining
+        }
+        maximum_distance = max(minimum_distances.values(), default=0.0)
         item = max(
-            (value for value in candidates if value.group_id not in selected_ids),
+            remaining,
             key=lambda value: (
-                min(
-                    angular(target_vector(value), target_vector(chosen))
-                    for chosen in selected
-                ),
+                (1.0 - quality_weight)
+                * (
+                    minimum_distances[value.group_id] / maximum_distance
+                    if maximum_distance > 0.0
+                    else 0.0
+                )
+                + quality_weight * scores[value.group_id],
                 -value.sample_index,
             ),
         )
         selected.append(item)
         selected_ids.add(item.group_id)
     return selected
+
+
+def target_farthest_first(candidates: list[Candidate], count: int) -> list[Candidate]:
+    return soft_quality_target_farthest_first(
+        candidates,
+        count,
+        {item.group_id: 0.0 for item in candidates},
+        0.0,
+    )
 
 
 def extract_candidates(
@@ -263,6 +315,9 @@ def select(
     gate_fractions = [
         float(value) for value in config["selection"]["quality_gate_fractions"]
     ]
+    soft_weights = [
+        float(value) for value in config["selection"].get("soft_quality_weights", [])
+    ]
     selections: dict[str, dict[str, list[dict[str, Any]]]] = {}
     accepted_fractions: dict[float, list[float]] = {
         value: [] for value in gate_fractions
@@ -283,13 +338,22 @@ def select(
         pitch_mean = statistics.fmean(train_pitch)
         yaw_mean = statistics.fmean(train_yaw)
         pitch_std, yaw_std = statistics.stdev(train_pitch), statistics.stdev(train_yaw)
+        def pose_coordinates(
+            item: Candidate,
+            pitch_center: float = pitch_mean,
+            pitch_scale: float = pitch_std,
+            yaw_center: float = yaw_mean,
+            yaw_scale: float = yaw_std,
+        ) -> tuple[float, float]:
+            return (
+                (item.head_pitch - pitch_center) / pitch_scale,
+                (item.head_yaw - yaw_center) / yaw_scale,
+            )
+
         pose = farthest_first(
             held_out,
             maximum_budget,
-            coordinates=lambda item: (
-                (item.head_pitch - pitch_mean) / pitch_std,
-                (item.head_yaw - yaw_mean) / yaw_std,
-            ),
+            coordinates=pose_coordinates,
             center=(0.0, 0.0),
         )
         methods = {
@@ -311,6 +375,16 @@ def select(
             methods[gate_names[fraction]] = target_farthest_first(
                 high[:accepted_count], maximum_budget
             )
+        for weight in soft_weights:
+            suffix = int(round(weight * 100))
+            methods[f"soft_quality{suffix}_target_diversity"] = (
+                soft_quality_target_farthest_first(
+                    held_out,
+                    maximum_budget,
+                    scores,
+                    weight,
+                )
+            )
         selections[subject] = {
             method: [
                 {"group_id": item.group_id, "min_sample_index": item.sample_index}
@@ -328,6 +402,7 @@ def select(
             str(fraction): statistics.fmean(values)
             for fraction, values in accepted_fractions.items()
         },
+        "soft_quality_weights": soft_weights,
         "selections": selections,
         "privacy": "selected_group_ids_only_no_images_labels_or_features_returned",
     }

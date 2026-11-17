@@ -51,6 +51,26 @@ class Task1QualitySelectionTest(unittest.TestCase):
         self.assertEqual(selected[0].group_id, "2")
         self.assertEqual({item.group_id for item in selected}, {"0", "2", "4"})
 
+    def test_zero_soft_weight_matches_target_diversity(self) -> None:
+        candidates = [self.candidate(index, index / 20.0, 0.0) for index in range(5)]
+        scores = {item.group_id: index / 4.0 for index, item in enumerate(candidates)}
+        expected = MODULE.target_farthest_first(candidates, 4)
+        actual = MODULE.soft_quality_target_farthest_first(
+            candidates, 4, scores, 0.0
+        )
+        self.assertEqual(
+            [item.group_id for item in actual],
+            [item.group_id for item in expected],
+        )
+
+    def test_full_soft_weight_follows_quality(self) -> None:
+        candidates = [self.candidate(index, index / 20.0, 0.0) for index in range(5)]
+        scores = {str(index): float(index) for index in range(5)}
+        selected = MODULE.soft_quality_target_farthest_first(
+            candidates, 3, scores, 1.0
+        )
+        self.assertEqual([item.group_id for item in selected], ["4", "3", "2"])
+
 
 if __name__ == "__main__":
     unittest.main()
