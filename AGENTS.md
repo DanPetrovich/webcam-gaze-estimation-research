@@ -116,7 +116,9 @@ Current execution status:
   `docs/task1_soft_quality_selection_baseline.md` and
   `docs/task1_hybrid_policy.md` and
   `docs/task1_calibration_reliability.md` and
-  `docs/task1_target_eccentricity_robustness.md`.
+  `docs/task1_target_eccentricity_robustness.md`. A concise cross-experiment
+  decision ledger is maintained in `docs/task1_experiment_ledger.md`; use it as
+  the entry point for Task 1 reporting while preserving the detailed records.
 - Completed — GazeGene transfer: the fixed 12-epoch MAE-B16 run
   selected epoch 11, reached 4.8366° GazeGene test subject-macro error, and
   reached 5.3430° on 15-subject MPIIFaceGaze zero-shot evaluation. Treat the
