@@ -64,8 +64,7 @@ Current execution status:
   0.0262° advantage over mean offset has a paired subject-bootstrap CI that
   includes zero. The first sample-selection baseline is also complete:
   target-space k-center diversity does not beat random selection at any tested
-  budget, although it beats fixed-uniform selection at `k=16`. Quality-aware
-  and combined quality/diversity selection remain pending. The prerequisite
+  budget, although it beats fixed-uniform selection at `k=16`. The prerequisite
   aggregate quality/head-pose audit is complete on all 45,000 normalized
   samples: simple signals distinguish injected blur, darkness, brightness, and
   occlusion with AUC 0.9452–0.9973 without persisting images or per-sample
@@ -77,13 +76,18 @@ Current execution status:
   also complete: on random calibration it gives small paired improvements at
   `k=3,5,9`, while its 0.0090° gain at `k=16` is inconclusive. It improves the
   combined quality selector at `k=16` by 0.0989° but does not close the gap to
-  random sampling. Details are in
+  random sampling. An adaptive quality-gate sweep is also complete: retaining
+  90% before target-diversity selection reaches 2.6665° with MAP at `k=16`,
+  0.0480° better than paired random, but the 95% CI (-0.0426–0.1387°) includes
+  zero. It removes the statistically supported harm of the fixed 50% gate at
+  larger budgets but does not establish a general selector win. Details are in
   `docs/task1_mean_offset_baseline.md` and
   `docs/task1_ridge_affine_baseline.md` and
   `docs/task1_target_diversity_baseline.md` and
   `docs/task1_quality_audit.md` and
   `docs/task1_quality_selection_baseline.md` and
-  `docs/task1_robust_offset_baseline.md`.
+  `docs/task1_robust_offset_baseline.md` and
+  `docs/task1_adaptive_quality_gate_baseline.md`.
 - Completed — GazeGene transfer: the fixed 12-epoch MAE-B16 run
   selected epoch 11, reached 4.8366° GazeGene test subject-macro error, and
   reached 5.3430° on 15-subject MPIIFaceGaze zero-shot evaluation. Treat the
