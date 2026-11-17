@@ -1,0 +1,30 @@
+[experiment]
+name = "task1_quality_audit"
+seed = 20261112
+subjects = 15
+expected_samples_per_subject = 3000
+natural_samples_per_subject = 256
+corruption_samples_per_subject = 64
+
+[quality]
+dark_pixel_threshold = 5
+bright_pixel_threshold = 250
+blur_kernel = 11
+blur_sigma = 3.0
+dark_scale = 0.25
+bright_scale = 1.5
+bright_offset = 64.0
+occlusion_y_fraction = [0.28, 0.55]
+occlusion_x_fraction = [0.18, 0.82]
+
+[protocol]
+required_hdf5_keys = ["face_patch", "face_gaze", "face_head_pose"]
+quality_features = [
+  "brightness",
+  "contrast",
+  "log_laplacian_variance",
+  "dark_fraction",
+  "bright_fraction",
+]
+controlled_corruptions = ["blur", "dark", "bright", "occlusion"]
+persist_per_sample_features = false
