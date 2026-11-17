@@ -80,7 +80,10 @@ Current execution status:
   90% before target-diversity selection reaches 2.6665° with MAP at `k=16`,
   0.0480° better than paired random, but the 95% CI (-0.0426–0.1387°) includes
   zero. It removes the statistically supported harm of the fixed 50% gate at
-  larger budgets but does not establish a general selector win. Details are in
+  larger budgets but does not establish a general selector win. A
+  leave-one-subject-out gate-policy check selects 90% in all folds at `k=9,16`,
+  supporting a budget-dependent policy while leaving the accuracy advantage
+  unresolved. Details are in
   `docs/task1_mean_offset_baseline.md` and
   `docs/task1_ridge_affine_baseline.md` and
   `docs/task1_target_diversity_baseline.md` and

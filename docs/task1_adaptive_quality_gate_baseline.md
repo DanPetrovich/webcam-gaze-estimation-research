@@ -88,6 +88,35 @@ response time can change the real cost materially.
 - Next test soft quality weights or a prespecified budget-dependent policy on a
   new protocol; do not tune the gate on the final evaluation subjects.
 
+## Leave-one-subject-out policy check
+
+An additional local analysis removed direct held-subject gate selection. For
+each subject, budget, and calibrator, it selected the gate with the lowest mean
+error on the other 14 subjects and then evaluated that gate on the held
+subject. This tests the hypothesis that the budget-dependent pattern is stable
+across identities.
+
+The selected policy was stable at the larger budgets:
+
+- `k=9` and `k=16`: all 15 folds selected 90% for both calibrators;
+- `k=5`: 13/15 folds selected 90% for both calibrators;
+- `k=3`: all MAP folds selected 75%, while 14/15 mean-offset folds selected
+  75%;
+- `k=1`: 14/15 MAP folds selected 50%, while mean offset selected 75% in
+  12/15 folds.
+
+The LOSO policy reaches 2.6665° for MAP at `k=16`, with a 0.0480° paired
+advantage over random and 95% CI -0.0424–0.1387°. At one shot, adaptive MAP
+reaches 3.2039° and improves over random by 0.2200°, but its CI
+(-0.0620–0.4906°) still includes zero. No budget/calibrator comparison has a
+paired CI wholly above zero.
+
+This analysis supports the qualitative hypothesis that stricter rejection is
+appropriate for tiny budgets and a 90% gate is more stable for `k>=5`. It
+leaves the accuracy-superiority hypothesis unresolved. It is still an internal
+cross-subject analysis on the same dataset rather than independent external or
+live-webcam confirmation.
+
 ## Threats to validity
 
 - Four gates were compared on the same 15 evaluation subjects; choosing the
@@ -122,4 +151,14 @@ python3 scripts/evaluate_task1_quality_selection.py \
   --selection-summary outputs/task1_quality_gate_sweep/selection_summary.json \
   --config configs/task1_quality_selection.toml \
   --output-dir outputs/task1_quality_gate_sweep
+```
+
+Leave-one-subject-out gate policy:
+
+```bash
+python3 scripts/evaluate_task1_adaptive_quality_gate.py \
+  --quality-results outputs/task1_quality_gate_sweep \
+  --mean-offset-results outputs/task1_mean_offset \
+  --config configs/task1_quality_selection.toml \
+  --output-dir outputs/task1_adaptive_quality_gate_loso
 ```
