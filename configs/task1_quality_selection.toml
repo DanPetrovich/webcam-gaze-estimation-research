@@ -1,0 +1,31 @@
+[experiment]
+name = "task1_quality_selection"
+seed = 20261112
+budgets = [1, 3, 5, 9, 16]
+expected_subjects = 15
+expected_samples_per_subject = 3000
+candidate_manifest_sha256 = "b2de22d9fe642700828950f06fadf037c8ed392c4cdf32feb9a9be9495fa2e19"
+bootstrap_replicates = 100000
+
+[selection]
+quality_gate_fraction = 0.50
+selectors = [
+  "high_quality",
+  "low_quality",
+  "pose_diversity",
+  "quality_then_target_diversity",
+]
+quality_components = [
+  "brightness_centrality",
+  "contrast",
+  "sharpness",
+  "dark_fraction",
+  "bright_fraction",
+]
+
+[protocol]
+quality_statistics = "other_14_subjects_only"
+pose_normalization = "other_14_subjects_mean_and_standard_deviation"
+calibrators = ["mean_offset", "map_offset"]
+primary_reference = "random"
+persist_per_sample_features = false
