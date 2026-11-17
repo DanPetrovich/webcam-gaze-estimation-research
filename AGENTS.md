@@ -103,7 +103,9 @@ Current execution status:
   does improve peripheral error at `k=9,16`, but trades away central/mid-range
   performance. Prespecified equal region quotas fail to reproduce that benefit
   and significantly worsen the periphery at `k=5,9`; do not tune or adopt them.
-  Details are in
+  A deployable three-region piecewise Huber offset routed by predicted
+  eccentricity also fails, worsening overall error by 0.4444° at `k=9` and
+  0.1983° at `k=16`; reject hard region routing. Details are in
   `docs/task1_mean_offset_baseline.md` and
   `docs/task1_ridge_affine_baseline.md` and
   `docs/task1_target_diversity_baseline.md` and

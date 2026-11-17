@@ -128,6 +128,40 @@ Decision update:
   corrections using an observable prediction-space variable, then validate the
   routing without ground-truth-region leakage.
 
+## Prediction-routed piecewise offset
+
+A deployable piecewise experiment used the equal-region calibration set to fit
+three separate Huber offsets. At inference, it selected the offset from the
+**uncalibrated predicted** eccentricity only; ground-truth region was used only
+for evaluation slices.
+
+This approach fails decisively:
+
+| k | Overall disadvantage | Central | Mid | Peripheral |
+|---:|---:|---:|---:|---:|
+| 9 | **0.4444°** | 0.1123° | **0.5042°** | **0.6251°** |
+| 16 | **0.1983°** | 0.0106° | **0.2687°** | **0.2704°** |
+
+Values are disadvantages relative to the global random-Huber policy. Overall,
+mid, and peripheral intervals are wholly worse than zero at both budgets,
+except the `k=16` peripheral interval only narrowly excludes zero
+(-0.6091–-0.0067° when expressed as advantage).
+
+The prediction-space router matches the true target region for 72.1% of the
+26,380 evaluation groups. True-region recall is 68.7% for central, 74.8% for
+mid, and 68.7% for peripheral samples. This routing noise matters, but the large
+degradation also shows that region-specific offsets fitted from only 3–6
+samples are unstable.
+
+Final spatial decision:
+
+- reject hard three-region offset routing;
+- do not add further hand-tuned region boundaries on MPIIFaceGaze;
+- retain one global Huber offset and report the peripheral failure slice;
+- future spatial personalization should use a continuous regularized correction
+  with substantially more calibration evidence or an independently validated
+  model, rather than discontinuous few-shot routing.
+
 ## Threats to validity
 
 - Eccentricity is relative to the camera forward axis, not physical screen
@@ -182,4 +216,15 @@ python3 scripts/run_task1_stratified_target_coverage.py \
   --hybrid-slice-results outputs/task1_hybrid_robustness \
   --config configs/task1_stratified_target_coverage.toml \
   --output-dir outputs/task1_stratified_target_coverage
+```
+
+Prediction-routed piecewise offsets:
+
+```bash
+python3 scripts/run_task1_piecewise_spatial_offset.py \
+  --predictions outputs/task0_lopo_baseline/all_predictions.csv \
+  --robust-results outputs/task1_robust_offset \
+  --hybrid-slice-results outputs/task1_hybrid_robustness \
+  --config configs/task1_piecewise_spatial_offset.toml \
+  --output-dir outputs/task1_piecewise_spatial_offset
 ```

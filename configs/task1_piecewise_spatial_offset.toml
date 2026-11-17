@@ -1,0 +1,20 @@
+[experiment]
+name = "task1_piecewise_spatial_offset"
+seed = 20261112
+budgets = [9, 16]
+bootstrap_replicates = 100000
+candidate_fraction = 0.20
+guard_fraction = 0.10
+maximum_iterations = 25
+tolerance = 1e-10
+
+[slices]
+central_max_deg = 10.0
+mid_max_deg = 20.0
+names = ["central_le_10", "mid_10_20", "peripheral_gt_20"]
+
+[protocol]
+calibration_selector = "equal_region_quota_plus_within_region_target_farthest_first"
+calibrator = "separate_huber_offset_per_target_region"
+inference_router = "uncalibrated_prediction_eccentricity_only"
+paired_reference = "random_global_huber_offset"
