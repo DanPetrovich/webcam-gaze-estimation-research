@@ -22,6 +22,12 @@ GATE_FRACTIONS = {
     "quality90_then_target_diversity": 0.90,
     "quality95_then_target_diversity": 0.95,
 }
+SOFT_QUALITY_WEIGHTS = {
+    "soft_quality10_target_diversity": 0.10,
+    "soft_quality25_target_diversity": 0.25,
+    "soft_quality50_target_diversity": 0.50,
+    "soft_quality75_target_diversity": 0.75,
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -49,8 +55,9 @@ def load_rows(path: Path) -> list[dict[str, Any]]:
     return rows
 
 
-def choose_gate(
+def choose_selector(
     rows: list[dict[str, Any]],
+    selector_values: dict[str, float],
     *,
     held_subject: str,
     budget: int,
@@ -58,7 +65,7 @@ def choose_gate(
 ) -> str:
     """Choose the lowest-error gate using only non-held subjects."""
     candidates = []
-    for selector, fraction in GATE_FRACTIONS.items():
+    for selector, value in selector_values.items():
         errors = [
             float(row["calibrated_mean_deg"])
             for row in rows
@@ -69,8 +76,24 @@ def choose_gate(
         ]
         if not errors:
             raise ValueError(f"Missing training rows for {selector}")
-        candidates.append((statistics.fmean(errors), -fraction, selector))
+        candidates.append((statistics.fmean(errors), -value, selector))
     return min(candidates)[2]
+
+
+def choose_gate(
+    rows: list[dict[str, Any]],
+    *,
+    held_subject: str,
+    budget: int,
+    calibrator: str,
+) -> str:
+    return choose_selector(
+        rows,
+        GATE_FRACTIONS,
+        held_subject=held_subject,
+        budget=budget,
+        calibrator=calibrator,
+    )
 
 
 def evaluate_policy(
@@ -80,14 +103,18 @@ def evaluate_policy(
     budgets: list[int],
     replicates: int,
     seed: int,
+    selector_values: dict[str, float] = GATE_FRACTIONS,
+    selected_value_field: str = "selected_gate_fraction",
+    comparison_name: str = "adaptive_gate_advantage_over_random",
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
     subjects = sorted({str(row["subject"]) for row in rows})
     selected_rows = []
     for subject in subjects:
         for budget in budgets:
             for calibrator in ("mean_offset", "map_offset"):
-                selector = choose_gate(
+                selector = choose_selector(
                     rows,
+                    selector_values,
                     held_subject=subject,
                     budget=budget,
                     calibrator=calibrator,
@@ -109,7 +136,7 @@ def evaluate_policy(
                         "budget": budget,
                         "calibrator": calibrator,
                         "selected_selector": selector,
-                        "selected_gate_fraction": GATE_FRACTIONS[selector],
+                        selected_value_field: selector_values[selector],
                         "uncalibrated_mean_deg": source["uncalibrated_mean_deg"],
                         "calibrated_mean_deg": source["calibrated_mean_deg"],
                         "calibrated_median_deg": source["calibrated_median_deg"],
@@ -147,8 +174,8 @@ def evaluate_policy(
                     "harmed_subject_fraction": statistics.fmean(
                         value < 0 for value in gains
                     ),
-                    "mean_selected_gate_fraction": statistics.fmean(
-                        float(row["selected_gate_fraction"]) for row in matching
+                    f"mean_{selected_value_field}": statistics.fmean(
+                        float(row[selected_value_field]) for row in matching
                     ),
                 }
             )
@@ -164,7 +191,7 @@ def evaluate_policy(
             )
             comparisons.append(
                 {
-                    "comparison": "adaptive_gate_advantage_over_random",
+                    "comparison": comparison_name,
                     "budget": budget,
                     "calibrator": calibrator,
                     "mean_difference_deg": statistics.fmean(differences),

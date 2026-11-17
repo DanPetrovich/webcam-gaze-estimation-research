@@ -74,6 +74,28 @@ class Task1AdaptiveQualityGateTest(unittest.TestCase):
             "quality95_then_target_diversity",
         )
 
+    def test_choose_selector_supports_soft_quality_family(self) -> None:
+        rows = [
+            {
+                "subject": "train",
+                "selector": selector,
+                "budget": 3,
+                "calibrator": "map_offset",
+                "calibrated_mean_deg": 1.0 if value == 0.25 else 2.0,
+            }
+            for selector, value in MODULE.SOFT_QUALITY_WEIGHTS.items()
+        ]
+        self.assertEqual(
+            MODULE.choose_selector(
+                rows,
+                MODULE.SOFT_QUALITY_WEIGHTS,
+                held_subject="held",
+                budget=3,
+                calibrator="map_offset",
+            ),
+            "soft_quality25_target_diversity",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

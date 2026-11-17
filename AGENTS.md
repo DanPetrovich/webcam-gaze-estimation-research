@@ -83,14 +83,19 @@ Current execution status:
   larger budgets but does not establish a general selector win. A
   leave-one-subject-out gate-policy check selects 90% in all folds at `k=9,16`,
   supporting a budget-dependent policy while leaving the accuracy advantage
-  unresolved. Details are in
+  unresolved. Soft quality/coverage selection is also complete: weight 0.25
+  improves one-shot mean/MAP over random by 0.3776°/0.3442° with paired CIs
+  above zero, requires no reacquisition, and is statistically indistinguishable
+  from random at `k=16`. LOSO retains the one-shot mean-offset result but makes
+  the MAP comparison inconclusive. Details are in
   `docs/task1_mean_offset_baseline.md` and
   `docs/task1_ridge_affine_baseline.md` and
   `docs/task1_target_diversity_baseline.md` and
   `docs/task1_quality_audit.md` and
   `docs/task1_quality_selection_baseline.md` and
   `docs/task1_robust_offset_baseline.md` and
-  `docs/task1_adaptive_quality_gate_baseline.md`.
+  `docs/task1_adaptive_quality_gate_baseline.md` and
+  `docs/task1_soft_quality_selection_baseline.md`.
 - Completed — GazeGene transfer: the fixed 12-epoch MAE-B16 run
   selected epoch 11, reached 4.8366° GazeGene test subject-macro error, and
   reached 5.3430° on 15-subject MPIIFaceGaze zero-shot evaluation. Treat the
