@@ -73,13 +73,17 @@ Current execution status:
   quality-then-target-diversity improves one-shot calibration by 0.3491° for
   mean offset and 0.3257° for MAP versus random, with paired CIs above zero,
   but becomes worse than random at `k=16`. Quality-only and pose-diversity
-  selection do not provide a general win. Reliability-weighted robust fitting
-  is the next step. Details are in
+  selection do not provide a general win. Huber-weighted residual fitting is
+  also complete: on random calibration it gives small paired improvements at
+  `k=3,5,9`, while its 0.0090° gain at `k=16` is inconclusive. It improves the
+  combined quality selector at `k=16` by 0.0989° but does not close the gap to
+  random sampling. Details are in
   `docs/task1_mean_offset_baseline.md` and
   `docs/task1_ridge_affine_baseline.md` and
   `docs/task1_target_diversity_baseline.md` and
   `docs/task1_quality_audit.md` and
-  `docs/task1_quality_selection_baseline.md`.
+  `docs/task1_quality_selection_baseline.md` and
+  `docs/task1_robust_offset_baseline.md`.
 - Completed — GazeGene transfer: the fixed 12-epoch MAE-B16 run
   selected epoch 11, reached 4.8366° GazeGene test subject-macro error, and
   reached 5.3430° on 15-subject MPIIFaceGaze zero-shot evaluation. Treat the
