@@ -1,0 +1,19 @@
+[experiment]
+name = "task1_hybrid_target_eccentricity_robustness"
+seed = 20261112
+budgets = [1, 3, 5, 9, 16]
+bootstrap_replicates = 100000
+candidate_fraction = 0.20
+guard_fraction = 0.10
+maximum_iterations = 25
+tolerance = 1e-10
+
+[slices]
+central_max_deg = 10.0
+mid_max_deg = 20.0
+names = ["central_le_10", "mid_10_20", "peripheral_gt_20"]
+
+[protocol]
+k1 = "soft_quality25_target_diversity_plus_map_offset"
+k_ge_3 = "random_plus_loso_tuned_huber_offset"
+evaluation_unit = "duplicate_safe_unique_observation_group"

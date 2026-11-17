@@ -95,7 +95,11 @@ Current execution status:
   also complete: within-calibration residual dispersion has near-zero
   correlation with downstream error, and leakage-safe 80% coverage abstention
   has no statistically supported gain at any budget. Do not use this score as
-  calibration confidence. Details are in
+  calibration confidence. Target-eccentricity robustness is also measured:
+  the hybrid policy improves central, mid-range, and peripheral slices at every
+  budget, but peripheral error remains 3.1506° at `k=16` and three subjects are
+  harmed there at every budget. Ridge-affine does not repair the periphery and
+  is significantly worse than Huber there at `k=3,5,9`. Details are in
   `docs/task1_mean_offset_baseline.md` and
   `docs/task1_ridge_affine_baseline.md` and
   `docs/task1_target_diversity_baseline.md` and
@@ -105,7 +109,8 @@ Current execution status:
   `docs/task1_adaptive_quality_gate_baseline.md` and
   `docs/task1_soft_quality_selection_baseline.md` and
   `docs/task1_hybrid_policy.md` and
-  `docs/task1_calibration_reliability.md`.
+  `docs/task1_calibration_reliability.md` and
+  `docs/task1_target_eccentricity_robustness.md`.
 - Completed — GazeGene transfer: the fixed 12-epoch MAE-B16 run
   selected epoch 11, reached 4.8366° GazeGene test subject-macro error, and
   reached 5.3430° on 15-subject MPIIFaceGaze zero-shot evaluation. Treat the
