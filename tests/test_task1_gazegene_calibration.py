@@ -125,3 +125,10 @@ def test_random_sampling_is_deterministic_per_sequence_and_draw() -> None:
 
     assert [item.frame for item in first] == [item.frame for item in second]
     assert len({item.frame for item in first}) == 5
+
+
+def test_failure_reason_exposes_only_bounded_codes() -> None:
+    assert MODULE.bounded_reason(ValueError("angular_error_mismatch")) == (
+        "angular_error_mismatch"
+    )
+    assert MODULE.bounded_reason(OSError("secret/path")) == "unexpected_OSError"

@@ -9,6 +9,7 @@ import hashlib
 import json
 import math
 import random
+import re
 import statistics
 import tomllib
 from collections import defaultdict
@@ -63,6 +64,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--mode", choices=("audit", "smoke", "full"), default="full")
     return parser.parse_args()
+
+
+def bounded_reason(error: Exception) -> str:
+    reason = str(error)
+    if re.fullmatch(r"[a-z][a-z0-9_]{0,79}", reason):
+        return reason
+    return f"unexpected_{type(error).__name__}"
 
 
 def stable_seed(seed: int, *parts: object) -> int:
@@ -600,4 +608,13 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except (OSError, ValueError, KeyError, csv.Error) as error:
+        print(
+            json.dumps(
+                {"status": "failed", "reason": bounded_reason(error)},
+                separators=(",", ":"),
+            )
+        )
+        raise SystemExit(1) from None
