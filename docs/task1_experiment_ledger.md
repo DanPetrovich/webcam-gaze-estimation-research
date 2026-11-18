@@ -31,6 +31,7 @@ not interchangeable.
 | Equal region quotas | Significantly worse peripherally at `k=5,9` | Rejected | More peripheral samples alone do not solve peripheral error |
 | Prediction-routed piecewise offsets | Overall worse by 0.4444° at `k=9`, 0.1983° at `k=16` | Rejected | Do not use hard region routing with few-shot local offsets |
 | GazeGene initialization transfer | LOPO 4.6857°, 0.1058° worse than official MAE initialization | Negative transfer | Keep official MAE Task 0 initialization |
+| GazeGene few-shot calibration | MAP gains are supported at `k=3,5,9,16`; Huber reaches 4.4497° at `k=16`, a 0.4037° gain | Supported with domain shift | Shrinkage is essential; MPII's Huber-at-`k=3,5` policy does not transfer |
 
 ## Current supported policy
 
@@ -85,10 +86,13 @@ Bulk per-sample predictions or checkpoints must not be exchanged through the
 GitHub relay. Any server-side follow-up must compute bounded aggregate metrics
 where the private data and model artifacts reside.
 
-The first independent follow-up is now protocol-frozen and awaiting execution:
-random-sample mean, MAP, and validation-tuned Huber offsets on the ten held-out
-GazeGene test identities. Its camera-safe split, metrics, privacy boundary, and
-decision rule are recorded in `docs/task1_gazegene_calibration_protocol.md`.
+The first independent follow-up is complete: random-sample mean, MAP, and
+validation-tuned Huber offsets were evaluated on ten held-out GazeGene test
+identities with camera-safe calibration and identity-level inference. The result
+supports MAP at `k=3,5,9,16` and Huber at `k=9,16`, while rejecting ordinary
+mean offset at small budgets in this domain. The next evidence boundary is a
+consented live-webcam pilot; further policy tuning on GazeGene test identities
+must stop.
 
 ## Detailed records
 

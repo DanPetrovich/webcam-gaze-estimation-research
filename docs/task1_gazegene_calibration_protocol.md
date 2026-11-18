@@ -2,9 +2,60 @@
 
 ## Status
 
-Prepared for a server-side audit, deterministic smoke run, and full aggregate
-evaluation. No calibration result is claimed in this document until the fixed
-server run completes.
+Completed. The server-side audit, deterministic two-draw smoke run, and full
+100-draw aggregate evaluation all passed. The full GitHub Actions run
+`44266194125` completed on 2026-11-18 in five minutes without model inference or
+training; it evaluated the frozen epoch-11 prediction artifacts in place.
+
+## Result
+
+The uncalibrated subject-macro error on the fixed temporal evaluation region is
+4.8534°. This differs from the previously reported 4.8366° full-test result
+because calibration reserves the first 30% of every camera sequence and reports
+only frames 600–1999.
+
+| k | Mean offset | MAP offset | Huber offset |
+|---:|---:|---:|---:|
+| 1 | 6.9124° (-2.0590°) | 4.8113° (+0.0420°) | 6.9124° (-2.0590°) |
+| 3 | 5.6289° (-0.7755°) | **4.7166° (+0.1368°)** | 5.0908° (-0.2375°) |
+| 5 | 5.2403° (-0.3870°) | **4.6498° (+0.2036°)** | 4.7681° (+0.0853°) |
+| 9 | 4.9387° (-0.0853°) | **4.5833° (+0.2700°)** | **4.5485° (+0.3049°)** |
+| 16 | 4.7499° (+0.1034°) | **4.5221° (+0.3313°)** | **4.4497° (+0.4037°)** |
+
+Parentheses show uncalibrated-minus-calibrated gain; positive is better. Bold
+marks gains whose paired 95% subject-bootstrap confidence interval is above
+zero. The supported intervals are:
+
+- MAP `k=3`: 0.0120–0.2742°;
+- MAP `k=5`: 0.0552–0.3700°;
+- MAP `k=9`: 0.1030–0.4525°;
+- MAP `k=16`: 0.1545–0.5262°;
+- Huber `k=9`: 0.1119–0.5166°;
+- Huber `k=16`: 0.2204–0.6062°.
+
+At `k=16`, MAP and Huber harm 0/10 subjects after averaging the 100 draws;
+ordinary mean offset harms 5/10. At `k=1`, ordinary mean and Huber are identical
+and harm all ten subjects on average. The one-shot MAP gain is small and
+inconclusive: 0.0420° with CI -0.0417–0.1353°.
+
+The validation-selected Huber delta is 10° at `k=1` and 3° at every larger
+budget. Method-to-method differences were not bootstrapped in this run, so the
+numerical Huber advantage over MAP at `k=9,16` remains exploratory.
+
+The result independently supports shrinkage as essential for sparse random
+calibration and supports robust residual fitting only at the larger tested
+budgets in this domain. It does not reproduce the MPIIFaceGaze recommendation
+of ordinary random Huber calibration at `k=3,5`; the deployment policy must
+therefore remain dataset-dependent until live-webcam evidence is available.
+
+## Audit result
+
+The audit confirmed 108,000 validation rows and 180,000 test rows with exact
+subject-camera-frame coverage, no duplicate keys, finite values, disjoint
+identity sets, and the expected checkpoint SHA-256. The maximum difference
+between saved mixed-precision angular error and error recomputed from serialized
+CSV angles was 0.0117° on validation and 0.0299° on test. No row exceeded the
+fixed 0.05° tolerance.
 
 ## Question
 

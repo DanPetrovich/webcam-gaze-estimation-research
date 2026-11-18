@@ -128,6 +128,18 @@ Current execution status:
   3.9483–5.4158°), 0.1058° or 2.31% worse than the official-MAE initialization;
   it does not support a transfer benefit. Details are in
   `docs/task1_gazegene_full_result.md`.
+- Completed — independent GazeGene few-shot calibration: ten held-out identities
+  and nine cameras per identity were evaluated with camera-specific calibration
+  and identity-level inference. On the fixed temporal evaluation region, the
+  uncalibrated subject-macro error is 4.8534°. Validation-fitted MAP shrinkage
+  has supported gains at `k=3,5,9,16`; validation-tuned Huber has supported
+  gains at `k=9,16` and reaches 4.4497° at `k=16`, a 0.4037° gain (95% paired
+  subject-bootstrap CI 0.2204–0.6062°), with no harmed test identities after
+  draw averaging. Ordinary mean offset significantly harms `k=1,3,5`, and the
+  MPIIFaceGaze Huber recommendation at `k=3,5` does not transfer. Do not tune
+  further on these GazeGene test identities; the next policy evidence should
+  come from the consented live-webcam pilot. Details are in
+  `docs/task1_gazegene_calibration_protocol.md`.
 - Prepared — live-webcam validation scaffold: a deterministic normalized
   3x3/two-repetition stimulus manifest, explicit top-left screen-coordinate
   convention, screen geometry helpers, and privacy/metadata requirements are
