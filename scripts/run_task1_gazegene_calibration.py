@@ -124,6 +124,8 @@ def load_predictions(
     expected_subjects: list[int],
     cameras: int,
     frames: int,
+    angular_error_tolerance_deg: float,
+    enforce_angular_error_tolerance: bool,
 ) -> tuple[dict[tuple[int, int], tuple[Observation, ...]], dict[str, Any]]:
     required = {
         "subject",
@@ -137,6 +139,8 @@ def load_predictions(
     }
     grouped: dict[tuple[int, int], list[Observation]] = defaultdict(list)
     seen: set[tuple[int, int, int]] = set()
+    maximum_error_difference = 0.0
+    mismatch_counts = {"over_0_01_deg": 0, "over_0_05_deg": 0, "over_0_10_deg": 0}
     with path.open(newline="", encoding="utf-8") as stream:
         reader = csv.DictReader(stream)
         if not required.issubset(reader.fieldnames or []):
@@ -165,8 +169,18 @@ def load_predictions(
             seen.add(sample_key)
             observation = Observation(subject, camera, frame, *values)
             recomputed = angular_error_deg(observation, 0.0, 0.0)
-            if not math.isclose(
-                recomputed, observation.uncalibrated_error_deg, abs_tol=1e-2
+            difference = abs(recomputed - observation.uncalibrated_error_deg)
+            maximum_error_difference = max(maximum_error_difference, difference)
+            for threshold, name in (
+                (0.01, "over_0_01_deg"),
+                (0.05, "over_0_05_deg"),
+                (0.10, "over_0_10_deg"),
+            ):
+                if difference > threshold:
+                    mismatch_counts[name] += 1
+            if (
+                enforce_angular_error_tolerance
+                and difference > angular_error_tolerance_deg
             ):
                 raise ValueError("angular_error_mismatch")
             grouped[(subject, camera)].append(observation)
@@ -191,7 +205,11 @@ def load_predictions(
         "samples": len(seen),
         "duplicate_subject_camera_frames": 0,
         "finite": True,
-        "angular_error_verified": True,
+        "angular_error_tolerance_deg": angular_error_tolerance_deg,
+        "angular_error_max_abs_difference_deg": maximum_error_difference,
+        "angular_error_within_tolerance": maximum_error_difference
+        <= angular_error_tolerance_deg,
+        "angular_error_mismatch_counts": mismatch_counts,
     }
 
 
@@ -515,12 +533,16 @@ def main() -> None:
         expected_subjects=[int(value) for value in config["validation_subjects"]],
         cameras=int(config["cameras"]),
         frames=int(config["frames_per_camera"]),
+        angular_error_tolerance_deg=float(config["angular_error_tolerance_deg"]),
+        enforce_angular_error_tolerance=args.mode != "audit",
     )
     test, test_audit = load_predictions(
         args.test_predictions,
         expected_subjects=[int(value) for value in config["test_subjects"]],
         cameras=int(config["cameras"]),
         frames=int(config["frames_per_camera"]),
+        angular_error_tolerance_deg=float(config["angular_error_tolerance_deg"]),
+        enforce_angular_error_tolerance=args.mode != "audit",
     )
     if set(validation) & set(test):
         raise ValueError("validation_test_identity_overlap")

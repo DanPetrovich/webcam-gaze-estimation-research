@@ -61,10 +61,16 @@ def test_load_predictions_requires_complete_unique_sequence(tmp_path: Path) -> N
             )
 
     sequences, audit = MODULE.load_predictions(
-        path, expected_subjects=[47], cameras=1, frames=4
+        path,
+        expected_subjects=[47],
+        cameras=1,
+        frames=4,
+        angular_error_tolerance_deg=0.01,
+        enforce_angular_error_tolerance=True,
     )
 
     assert tuple(item.frame for item in sequences[(47, 0)]) == (0, 1, 2, 3)
+    assert audit.pop("angular_error_max_abs_difference_deg") < 1e-10
     assert audit == {
         "subjects": 1,
         "cameras_per_subject": 1,
@@ -72,7 +78,13 @@ def test_load_predictions_requires_complete_unique_sequence(tmp_path: Path) -> N
         "samples": 4,
         "duplicate_subject_camera_frames": 0,
         "finite": True,
-        "angular_error_verified": True,
+        "angular_error_tolerance_deg": 0.01,
+        "angular_error_within_tolerance": True,
+        "angular_error_mismatch_counts": {
+            "over_0_01_deg": 0,
+            "over_0_05_deg": 0,
+            "over_0_10_deg": 0,
+        },
     }
 
 
