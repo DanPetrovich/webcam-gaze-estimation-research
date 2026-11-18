@@ -85,6 +85,11 @@ Bulk per-sample predictions or checkpoints must not be exchanged through the
 GitHub relay. Any server-side follow-up must compute bounded aggregate metrics
 where the private data and model artifacts reside.
 
+The first independent follow-up is now protocol-frozen and awaiting execution:
+random-sample mean, MAP, and validation-tuned Huber offsets on the ten held-out
+GazeGene test identities. Its camera-safe split, metrics, privacy boundary, and
+decision rule are recorded in `docs/task1_gazegene_calibration_protocol.md`.
+
 ## Detailed records
 
 - `docs/task1_mean_offset_baseline.md`
@@ -99,3 +104,4 @@ where the private data and model artifacts reside.
 - `docs/task1_calibration_reliability.md`
 - `docs/task1_target_eccentricity_robustness.md`
 - `docs/task1_gazegene_full_result.md`
+- `docs/task1_gazegene_calibration_protocol.md`

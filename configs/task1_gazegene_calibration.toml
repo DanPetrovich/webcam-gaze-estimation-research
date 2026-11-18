@@ -1,0 +1,18 @@
+[experiment]
+name = "task1_gazegene_cross_dataset_calibration"
+seed = 20261118
+validation_subjects = [41, 42, 43, 44, 45, 46]
+test_subjects = [47, 48, 49, 50, 51, 52, 53, 54, 55, 56]
+cameras = 9
+frames_per_camera = 2000
+candidate_fraction = 0.20
+guard_fraction = 0.10
+budgets = [1, 3, 5, 9, 16]
+random_draws = 100
+smoke_draws = 2
+bootstrap_replicates = 100000
+huber_delta_degrees = [0.5, 1.0, 2.0, 3.0, 5.0, 10.0]
+huber_tuning_draws = 20
+maximum_iterations = 100
+tolerance = 1e-10
+expected_checkpoint_sha256 = "d24c6cee737cd12dbc66264538d28d8d4fd8a4e71caca69a24fd79d2e906a87b"
