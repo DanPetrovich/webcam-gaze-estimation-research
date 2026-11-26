@@ -1,0 +1,7 @@
+[experiment]
+seed = 20261126
+target_eccentricity_edges_deg = [10, 20, 30, 45]
+window_frames = 9
+target_radius_deg = 1.0
+budget = 9
+draws = 30
