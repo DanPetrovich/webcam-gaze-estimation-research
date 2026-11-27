@@ -1,0 +1,5 @@
+[experiment]
+angle_scale_deg = 30.0
+ridge_lambdas = [0.001, 0.01, 0.1, 1.0, 10.0, 100.0]
+huber_delta_degrees = [10.0, 3.0, 3.0, 3.0, 3.0]
+slice_edges_deg = [20.0, 45.0]

@@ -12,18 +12,29 @@ import statistics
 import sys
 import tomllib
 from collections import defaultdict
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import run_task1_mean_offset as baseline  # noqa: E402
-
 
 Matrix = tuple[
     tuple[float, float],
     tuple[float, float],
     tuple[float, float],
 ]
+
+
+class AngleObservation(Protocol):
+    @property
+    def pred_pitch(self) -> float: ...
+    @property
+    def pred_yaw(self) -> float: ...
+    @property
+    def target_pitch(self) -> float: ...
+    @property
+    def target_yaw(self) -> float: ...
 
 
 def parse_args() -> argparse.Namespace:
@@ -58,7 +69,7 @@ def solve_3x3(matrix: list[list[float]], values: list[float]) -> list[float]:
 
 
 def fit_ridge_affine(
-    selected: list[baseline.Observation],
+    selected: Sequence[AngleObservation],
     *,
     ridge_lambda: float,
     angle_scale_rad: float,
