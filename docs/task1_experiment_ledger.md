@@ -33,6 +33,7 @@ not interchangeable.
 | GazeGene initialization transfer | LOPO 4.6857°, 0.1058° worse than official MAE initialization | Negative transfer | Keep official MAE Task 0 initialization |
 | GazeGene few-shot calibration | MAP gains are supported at `k=3,5,9,16`; Huber reaches 4.4497° at `k=16`, a 0.4037° gain | Supported with domain shift | Shrinkage is essential; MPII's Huber-at-`k=3,5` policy does not transfer |
 | GazeGene gap diagnostic | Same checkpoint 4.8366° GazeGene / 5.3430° MPII; abundant early mean-offset gain 0.4499° on GazeGene | Diagnostic | Report gaze-angle distribution and limited constant-offset gains; temporal selection requires fixation sequences |
+| GazeGene ridge-affine | 4.5066° at `k=16` versus MAP 4.5221° and Huber 4.4497°; both paired CIs include zero | No resolved advantage | Keep MAP and Huber as references; Huber also has the lower ≥45° error at `k=9,16` |
 
 ## Current supported policy
 
@@ -111,3 +112,4 @@ must stop.
 - `docs/task1_gazegene_full_result.md`
 - `docs/task1_gazegene_calibration_protocol.md`
 - `docs/task1_gazegene_gap_diagnostic.md`
+- `docs/task1_gazegene_affine.md`
