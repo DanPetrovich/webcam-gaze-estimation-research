@@ -1,0 +1,8 @@
+cff-version: 1.2.0
+message: "If you use this research repository, please cite it as software."
+title: "Webcam Gaze Estimation Research"
+type: software
+authors:
+  - given-names: Daniil
+    family-names: Petrovich
+repository-code: "https://github.com/DanPetrovich/webcam-gaze-estimation-research"

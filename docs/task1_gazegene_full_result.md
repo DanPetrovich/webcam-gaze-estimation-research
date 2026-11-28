@@ -63,8 +63,7 @@ performance experiment. The completed run must remain unchanged.
 
 ## Checkpoint provenance
 
-The checkpoint files remain private on the compute server and are not committed
-or transferred through the relay.
+Checkpoint files remain in private storage.
 
 | Artifact | Bytes | SHA-256 |
 |---|---:|---|

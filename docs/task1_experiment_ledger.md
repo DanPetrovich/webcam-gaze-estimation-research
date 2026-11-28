@@ -84,9 +84,9 @@ scientific conclusion must add new evidence:
 - or a continuous spatial personalization method evaluated on a genuinely held
   validation population before final testing.
 
-Bulk per-sample predictions or checkpoints must not be exchanged through the
-GitHub relay. Any server-side follow-up must compute bounded aggregate metrics
-where the private data and model artifacts reside.
+Compute follow-up metrics where the private data and model artifacts reside.
+Publish reviewed aggregates and keep per-sample predictions and checkpoints
+in authorized private storage.
 
 The first independent follow-up is complete: random-sample mean, MAP, and
 validation-tuned Huber offsets were evaluated on ten held-out GazeGene test

@@ -56,7 +56,9 @@ def target_diversity_sample(
         )
         return math.degrees(math.acos(max(-1.0, min(1.0, cosine))))
 
-    first = min(candidates, key=lambda item: (distance_to_center(item), item.min_sample_index))
+    first = min(
+        candidates, key=lambda item: (distance_to_center(item), item.min_sample_index)
+    )
     selected = [first]
     selected_ids = {first.group_id}
     while len(selected) < budget:

@@ -49,7 +49,7 @@ artifact:
 - Prefer derived predictions and aggregate metrics over retained raw video.
 - If raw capture is temporarily necessary, store it only under an ignored local
   data directory with a documented deletion time.
-- Never send capture artifacts through the GitHub relay.
+- Keep capture artifacts in authorized private storage.
 
 ## Experimental safeguards
 

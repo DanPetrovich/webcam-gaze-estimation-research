@@ -2,12 +2,8 @@
 
 ## Execution status
 
-Completed on 2026-11-27. The first dispatch failed while downloading the
-dispatcher from GitHub and did not reach the server compute step. After
-limiting the workflow to the required dispatcher file, the
-[successful run](https://github.com/DanPetrovich/codex-gpu-relay/actions/runs/45962915803)
-passed the two-draw real-data smoke in 9 s and the full 100-draw comparison in
-26 s. The evaluation ran on the Windows server with Python 3.11.9 and NumPy
+Completed on 2026-11-27. The two-draw real-data smoke took 9 s and the full
+100-draw comparison took 26 s. The evaluation ran on Windows with Python 3.11.9 and NumPy
 2.3.5. The smoke and full reports used the same inputs:
 
 - validation prediction SHA-256 `fb63347dd9104e89d37a46b3bb581c26d9165c63b37f59265b5e5ba92646c36a`;
@@ -94,5 +90,5 @@ ordinary pitch/yaw coordinates and can be sensitive near the yaw wrap.
 `scripts/run_task1_gazegene_affine.py` runs as a module with `--validation`,
 `--test`, `--protocol`, `--config` and `--output` on Python 3.11+ with NumPy.
 The research source revision is `7fc2b7eb1b089c01c5d6f06f7b677b166049a087`.
-The relay verifies the checkpoint and research file hashes before running.
-Only aggregate metrics, provenance hashes and configuration leave the server.
+The run verified the checkpoint and research file hashes before evaluation.
+Public artifacts contain aggregate metrics, provenance hashes and configuration.

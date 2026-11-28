@@ -2,10 +2,7 @@
 
 ## Results
 
-The Windows server CPU evaluation completed on 2026-11-26 in the
-[successful relay run](https://github.com/DanPetrovich/codex-gpu-relay/actions/runs/45883829676).
-The first invocation returned `prepare_failed`; the same operation succeeded on
-the next attempt.
+The CPU evaluation completed on Windows on 2026-11-26.
 
 | Target eccentricity | GazeGene share | GazeGene error | MPIIFaceGaze share | MPIIFaceGaze error |
 |---|---:|---:|---:|---:|
@@ -96,5 +93,4 @@ limit how this offline result generalizes to live fixation selection.
 ## Run
 
 The research revision is `d2df9009611f1fc9e55217c3831de571b1a1d74c`.
-The fixed relay operation runs the evaluation on the Windows compute server
-and returns only aggregate JSON. Prediction tables remain server-local.
+The evaluation exports aggregate JSON. Prediction tables remain in private storage.

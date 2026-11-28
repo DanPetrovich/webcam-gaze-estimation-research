@@ -139,10 +139,9 @@ ranking remains exploratory unless a paired comparison is explicitly added.
 
 ## Privacy and artifact handling
 
-Predictions, labels, images, and checkpoints remain on the private compute
-server. The GitHub relay may return only the bounded audit and aggregate metric
-summary. Server-local per-subject tables are allowed for reproducibility but are
-not transferred through the relay.
+Predictions, labels, images, checkpoints and per-subject tables remain in
+private storage. Public artifacts contain reviewed aggregate results and
+protocol metadata.
 
 ## Threats to validity
 

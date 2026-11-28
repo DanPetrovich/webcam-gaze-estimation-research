@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 686 306" width="686" height="306" role="img" aria-labelledby="title desc">
+  <title id="title">Mean angular error before and after 16-shot calibration</title>
+  <desc id="desc">MPIIFaceGaze: 4.61 to 2.71 degrees. GazeGene: 4.85 to 4.45 degrees.</desc>
+  <style>
+    text { font: 15px system-ui, sans-serif; fill: #1e293b }
+    .bold { font-weight: 650 }
+  </style>
+  <rect width="686" height="306" rx="14" fill="#f8fafc"/>
+  <path d="M150 57v183 M250 57v183 M350 57v183 M450 57v183 M550 57v183 M650 57v183" stroke="#dbe3ec" fill="none"/>
+  <text x="26" y="46" class="bold">MPIIFaceGaze · mean offset</text>
+  <text x="26" y="73">Uncalibrated</text>
+  <rect x="150" y="59" width="461.43" height="18" rx="3" fill="#64748b"/>
+  <text x="619.4300000000001" y="73" class="bold">4.61°</text>
+  <text x="26" y="100">16-shot</text>
+  <rect x="150" y="86" width="271.23" height="18" rx="3" fill="#007d75"/>
+  <text x="429.23" y="100" class="bold">2.71°</text>
+  <text x="26" y="150" class="bold">GazeGene · Huber offset</text>
+  <text x="26" y="177">Uncalibrated</text>
+  <rect x="150" y="163" width="485.34" height="18" rx="3" fill="#64748b"/>
+  <text x="643.3399999999999" y="177" class="bold">4.85°</text>
+  <text x="26" y="204">16-shot</text>
+  <rect x="150" y="190" width="444.97" height="18" rx="3" fill="#007d75"/>
+  <text x="602.97" y="204" class="bold">4.45°</text>
+  <g text-anchor="middle">
+    <text x="150" y="262">0°</text>
+    <text x="250" y="262">1°</text>
+    <text x="350" y="262">2°</text>
+    <text x="450" y="262">3°</text>
+    <text x="550" y="262">4°</text>
+    <text x="650" y="262">5°</text>
+    <text x="400" y="287" class="bold">Mean angular error · lower is better</text>
+  </g>
+</svg>

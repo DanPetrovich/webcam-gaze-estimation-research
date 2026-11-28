@@ -20,6 +20,11 @@ htmlcov/
 !.env.example
 
 # Research data and generated artifacts
+/output/
+/tmp/
+/.chart-data-*/
+/AGENTS.local.md
+/docs/*.local.md
 data/**
 !data/.gitkeep
 outputs/**
